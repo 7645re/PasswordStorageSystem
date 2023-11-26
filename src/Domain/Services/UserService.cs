@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using Domain.DTO;
 using Domain.Models;
 using Domain.Repositories;
@@ -18,21 +19,35 @@ public class UserService : IUserService
         return await _userRepository.GetPasswordByLoginAsync(login);
     }
 
-    public async Task<bool> ChangePasswordByLoginAsync(UserToChangePassword userToChangePassword)
+    public async Task<OperationResult> ChangePasswordByLoginAsync(UserToChangePassword userToChangePassword)
     {
-        if (await _userRepository.ExistsIsUserAsync(new User(userToChangePassword.Login,
-                userToChangePassword.NewPassword)))
-            return false;
-        await _userRepository.ChangePasswordByLoginAsync(new User(userToChangePassword.Login,
-            userToChangePassword.NewPassword));
-        return true;
+        if (await _userRepository.UserExistAsync(userToChangePassword.Login, userToChangePassword.NewPassword))
+            return new OperationResult
+            {
+                IsSuccess = false,
+                ErrorMessage = "User already has such a password"
+            };
+        await _userRepository.ChangePasswordByLoginAsync(userToChangePassword.Login, userToChangePassword.NewPassword);
+        return new OperationResult
+        {
+            IsSuccess = true
+        };
     }
-
-    public async Task<bool> CreateUserAsync(UserToCreate userToCreate)
+    
+    public async Task<OperationResult> CreateUserAsync(UserToCreate userToCreate)
     {
-        if (await _userRepository.GetByLoginAsync(userToCreate.Login) != null ||
-            await _userRepository.ExistsIsUserAsync(new User(userToCreate.Login, userToCreate.Password))) return false;
-        await _userRepository.CreateUserAsync(new User(userToCreate.Login, userToCreate.Password));
-        return true;
+        var user = await _userRepository.GetByLoginAsync(userToCreate.Login);
+        if (user != null) 
+            return new OperationResult
+            {
+                IsSuccess = false,
+                ErrorMessage = "User already exist"
+            };
+
+        await _userRepository.CreateUserAsync(userToCreate.Login, userToCreate.Password);
+        return new OperationResult
+        {
+            IsSuccess = true
+        };
     }
 }

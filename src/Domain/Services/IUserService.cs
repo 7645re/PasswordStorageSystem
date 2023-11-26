@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using Domain.DTO;
 
 namespace Domain.Services;
@@ -5,6 +6,6 @@ namespace Domain.Services;
 public interface IUserService
 {
     public Task<string> GetPasswordByLoginAsync(string login);
-    public Task<bool> ChangePasswordByLoginAsync(UserToChangePassword userToChangePassword);
-    public Task<bool> CreateUserAsync(UserToCreate userToCreate);
+    public Task<OperationResult> ChangePasswordByLoginAsync(UserToChangePassword userToChangePassword);
+    public Task<OperationResult> CreateUserAsync(UserToCreate userToCreate);
 }

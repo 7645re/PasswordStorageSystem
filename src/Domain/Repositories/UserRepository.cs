@@ -1,5 +1,8 @@
 using System.Data;
+using System.Linq;
+using System.Threading.Tasks;
 using Domain.Models;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace Domain.Repositories;
@@ -7,7 +10,7 @@ namespace Domain.Repositories;
 public class UserRepository : CassandraRepositoryBase<User>, IUserRepository
 {
 
-    public UserRepository(IOptions<CassandraOptions> cassandraOptions) : base(cassandraOptions)
+    public UserRepository(IOptions<CassandraOptions> cassandraOptions, ILogger<UserRepository> logger) : base(cassandraOptions, logger)
     {
     }
 
@@ -22,10 +25,16 @@ public class UserRepository : CassandraRepositoryBase<User>, IUserRepository
         };
     }
 
-    public async Task<bool> ExistsIsUserAsync(User user)
+    public async Task<bool> UserExistAsync(string login, string password)
     {
-        var result = await GetByLoginAsync(user.Login);
-        return result?.Password == user.Password;
+        var result = await GetByLoginAsync(login);
+        return result?.Password == password;
+    }
+
+    public async Task<bool> UserExistByLoginAsync(string login)
+    {
+        var result = await GetByLoginAsync(login);
+        return result != null;
     }
 
     public async Task<string> GetPasswordByLoginAsync(string login)
@@ -34,13 +43,21 @@ public class UserRepository : CassandraRepositoryBase<User>, IUserRepository
         return result.Single().Login ?? throw new DataException();
     }
 
-    public async Task ChangePasswordByLoginAsync(User user)
+    public async Task ChangePasswordByLoginAsync(string login, string password)
     {
-        await AddAsync(user);
+        await AddAsync(new User
+        {
+            Login = login,
+            Password = password
+        });
     }
 
-    public async Task CreateUserAsync(User user)
+    public async Task CreateUserAsync(string login, string password)
     {
-        await AddAsync(user);
+        await AddAsync(new User
+        {
+            Login = login,
+            Password = password
+        });
     }
 }

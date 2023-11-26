@@ -11,10 +11,4 @@ public class User
         
     [Column("password")]
     public string Password { get; set; }
-    
-    public User(string login, string password)
-    {
-        Login = login;
-        Password = password;
-    }
 }

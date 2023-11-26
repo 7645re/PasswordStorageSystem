@@ -1,3 +1,4 @@
+using System;
 using Cassandra;
 
 namespace Domain.Migrations
@@ -24,16 +25,19 @@ namespace Domain.Migrations
         public void ApplyMigrations()
         {
             MigrateToV1();
+            MigrateToV2();
         }
 
         private void MigrateToV1()
         {
-            _session.Execute("DROP KEYSPACE my_keyspace;");
-            _session.Execute("DROP TABLE IF EXISTS my_keyspace.User;");
-            _session.Execute("DROP TABLE IF EXISTS my_keyspace.PasswordStorage;");
-            _session.Execute("CREATE KEYSPACE IF NOT EXISTS my_keyspace WITH replication = {'class': 'SimpleStrategy','replication_factor': 1};");
             _session.Execute("CREATE TABLE IF NOT EXISTS my_keyspace.User (login TEXT PRIMARY KEY, password TEXT);");
-            _session.Execute("CREATE TABLE IF NOT EXISTS my_keyspace.PasswordStorage (login TEXT, resourceName TEXT, resourcePassword TEXT, PRIMARY KEY (login, resourceName));");
+            _session.Execute("CREATE TABLE IF NOT EXISTS my_keyspace.ResourceCredential (login TEXT, resource_name TEXT, resource_login TEXT, resource_password TEXT, last_update TIMESTAMP, PRIMARY KEY (login, resource_name, resource_login));");
+            _session.Execute("CREATE INDEX IF NOT EXISTS last_updated_index ON my_keyspace.ResourceCredential (last_update);");
+        }
+
+        private void MigrateToV2()
+        {
+            
         }
 
         public void Dispose()
