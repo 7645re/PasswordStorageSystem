@@ -23,13 +23,6 @@ public class UserService : IUserService
 
     public async Task<OperationResult<TokenInfo>> GetUserByLoginAndPasswordAsync(string userLogin, string password)
     {
-        var validateResult = _userValidator.Validate(userLogin, password);
-        if (!validateResult.IsSuccess)
-            return new OperationResult<TokenInfo>
-            {
-                IsSuccess = false,
-                ErrorMessage = validateResult.ErrorMessage
-            };
         var userResult = await GetUserAsync(userLogin);
         if (!userResult.IsSuccess)
             return new OperationResult<TokenInfo>

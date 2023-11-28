@@ -1,6 +1,7 @@
-import React, { useState, ChangeEvent, FormEvent, SetStateAction } from 'react';
-import styles from './LoginForm.module.css';
-import useLocalStorage from '../../../hooks/useLocalStorage';
+import React, { useState, ChangeEvent, FormEvent, SetStateAction, useEffect } from 'react';
+import { Navigate, useNavigate } from 'react-router-dom';
+import useLocalStorage from '../../hooks/useLocalStorage';
+import styles from './Login.module.css';
 
 interface FormData {
     userLogin: string;
@@ -8,38 +9,49 @@ interface FormData {
 }
 
 interface ResponseBody {
-    isSuccess: boolean,
-    errorMessage: string,
+    isSuccess: boolean;
+    errorMessage: string;
     result: {
-        token: string
-    }
+        token: string;
+    };
 }
 
-interface Props {
-    setUserSignIn: React.Dispatch<React.SetStateAction<boolean>>;
+enum FormMode {
+    LOGIN = 'LOGIN',
+    REGISTER = 'REGISTER',
 }
 
-const LoginForm: React.FC<Props> = (props: Props) => {
+const Login: React.FC = () => {
     const [formData, setFormData] = useState<FormData>({ userLogin: '', password: '' });
     const [requestResult, setRequestResult] = useState<ResponseBody | null>(null);
-    const [token, setToken] = useLocalStorage('token', null);
-
+    const [formMode, setFormMode] = useState<FormMode>(FormMode.LOGIN);
+    const [token, setToken] = useLocalStorage("token", null)
+    const [redirect, setRedirect] = useState(false);
+    const navigate = useNavigate();
+    console.log("login comp", redirect, requestResult, token)
+    
+    // useEffect(() => {
+    //     if (redirect) navigate("/")
+    // })
     const handleFormSubmit = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-
+        
         try {
-            const response = await fetch('http://localhost:5164/users/login', {
+            let url = formMode === FormMode.LOGIN ? 'http://localhost:5164/users/login' : 'http://localhost:5164/users/register';
+
+            const response = await fetch(url, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify(formData),
             });
-            let body : ResponseBody = await response.json();
+
+            let body: ResponseBody = await response.json();
             setRequestResult(body);
             if (body.isSuccess) {
-                props.setUserSignIn(true);
                 setToken(body.result.token);
+                setRedirect(true)
             }
         } catch (error) {
             console.error('Произошла ошибка', error);
@@ -51,10 +63,16 @@ const LoginForm: React.FC<Props> = (props: Props) => {
         setFormData({ ...formData, [name]: value });
     };
 
-    return (
+    const switchFormMode = () => {
+        setFormMode(formMode === FormMode.LOGIN ? FormMode.REGISTER : FormMode.LOGIN);
+        setFormData({ userLogin: '', password: '' });
+        setRequestResult(null);
+    };
+
+    let a = redirect || token !== null ? <Navigate to={"/"}/> : <div className={styles.page}>
         <form onSubmit={handleFormSubmit} className={styles.authForm}>
             <div className={styles.formLabel}>
-                <span>Sign up</span>
+                <span>{formMode === FormMode.LOGIN ? 'Sign in' : 'Sign up'}</span>
             </div>
             <div>
                 <input
@@ -79,9 +97,18 @@ const LoginForm: React.FC<Props> = (props: Props) => {
                 />
             </div>
             <div>{requestResult?.errorMessage}</div>
-            <button type="submit">Войти</button>
+            <button type="submit">{formMode === FormMode.LOGIN ? 'Sign in' : 'Sign up'}</button>
+            <div>
+                <span onClick={switchFormMode}>
+                    {formMode === FormMode.LOGIN ? 'Don\'t have an account? Sign up' : 'Already have an account? Sign in'}
+                </span>
+            </div>
         </form>
+    </div>
+    
+    return (
+        a
     );
 };
 
-export default LoginForm;
+export default Login;

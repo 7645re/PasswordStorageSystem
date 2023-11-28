@@ -7,28 +7,79 @@
     align-items: center;
 }
 
-
-.authWindow {
+.systemPanel {
     display: flex;
-    width: 1000px;
-    height: 700px;
-    border: 5px solid #bef7ff;
     border-radius: 20px;
-    box-shadow: 2px 2px 4px 2px rgba(0, 0, 0, 0.1);
+    border: 5px solid #5555ff;
+    padding: 40px;
     flex-direction: column;
+    max-width: 1200px;
+    width: 100%;
 }
 
-.windowLabel {
-    width: 100%;
+.panelHeader {
+    display: flex;
+    margin-bottom: 20px;
+    justify-content: space-between;
+}
+
+.panelLabel {
+    font-weight: 700;
+    font-size: 45px;
+}
+
+.safetyStatus {
+    color: #b4b4b4;
+    font-size: 20px;
+    font-weight: 700;
+}
+
+.updateSafetyStatus {
+    border-radius: 20px;
+    background-color: #5555ff;
+    border: 4px solid #7070ff;
+    color: white;
+    margin-left: 50px;
+}
+
+.updateSafetyStatus:hover {
+    cursor: pointer;
+}
+
+.updateSafetyStatus:active {
+    filter: brightness(120%);
+}
+
+.analytics {
+    background-color: #F7F8FA;
+    justify-content: space-between;
+    padding: 30px;
+    border-radius: 20px;
+    display: flex;
+}
+
+.passwordCounterValue {
+    font-size: 80px;
+    font-weight: 700;
+}
+
+.counterLabel {
+    font-size: 35px;
+}
+
+.visualizationBlock {
+    margin-left: 50px;
     display: flex;
     justify-content: center;
     align-items: center;
-    font-weight: 700;
-    font-size: 40px;
-    font-family: Arial, serif;
+    flex-direction: row;
 }
 
-.loginForm {
+.visualizationItem {
     display: flex;
     flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    font-weight: 700;
+    font-size: 20px;
 }

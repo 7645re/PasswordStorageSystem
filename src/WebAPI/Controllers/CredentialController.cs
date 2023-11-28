@@ -10,7 +10,7 @@ namespace WebAPI.Controllers;
 
 [ApiController]
 [Authorize]
-[Route("users/{userLogin}/credentials")]
+[Route("user/{userLogin}/credentials")]
 public class CredentialController : ControllerBase
 {
     private readonly ICredentialService _credentialService;

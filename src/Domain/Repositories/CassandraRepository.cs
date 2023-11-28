@@ -43,6 +43,7 @@ public abstract class CassandraRepositoryBase<T> where T : class
 
     protected async Task<IEnumerable<T>> ExecuteQueryAsync(CqlQuery<T> query)
     {
+        await Table.CreateIfNotExistsAsync();
         query.EnableTracing();
         var result = await query.ExecuteAsync();
         LogQueryTrace(query.QueryTrace);
@@ -51,6 +52,7 @@ public abstract class CassandraRepositoryBase<T> where T : class
 
     protected async Task<IEnumerable<TQuery>> ExecuteQueryAsync<TQuery>(CqlQuery<TQuery> query)
     {
+        await Table.CreateIfNotExistsAsync();
         query.EnableTracing();
         var result = await query.ExecuteAsync();
         LogQueryTrace(query.QueryTrace);
@@ -59,6 +61,7 @@ public abstract class CassandraRepositoryBase<T> where T : class
     
     protected async Task ExecuteQueryAsync(CqlDelete query)
     {
+        await Table.CreateIfNotExistsAsync();
         query.EnableTracing();
         await query.ExecuteAsync();
         LogQueryTrace(query.QueryTrace);
@@ -66,6 +69,7 @@ public abstract class CassandraRepositoryBase<T> where T : class
     
     protected async Task AddAsync(T entity)
     {
+        await Table.CreateIfNotExistsAsync();
         var query = Table.Insert(entity);
         query.EnableTracing();
         await query.ExecuteAsync();
@@ -74,6 +78,7 @@ public abstract class CassandraRepositoryBase<T> where T : class
     
     protected async Task UpdateAsync(CqlUpdate query)
     {
+        await Table.CreateIfNotExistsAsync();
         query.EnableTracing();
         await query.ExecuteAsync();
         LogQueryTrace(query.QueryTrace);

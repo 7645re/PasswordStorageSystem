@@ -6,7 +6,7 @@ using WebAPI.DTO.Request;
 namespace WebAPI.Controllers;
 
 [ApiController]
-[Route("users")]
+[Route("user")]
 public class UserController : ControllerBase
 {
     private readonly IUserService _userService;
