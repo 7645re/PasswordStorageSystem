@@ -1,9 +1,10 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
-using System.Linq.Expressions;
 using System.Threading.Tasks;
 using Cassandra;
 using Cassandra.Data.Linq;
+using Domain.Options;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -11,11 +12,12 @@ namespace Domain.Repositories;
 
 public abstract class CassandraRepositoryBase<T> where T : class
 {
-    private readonly Table<T> _table;
+    protected readonly Table<T> Table;
 
     private readonly ILogger _logger;
 
-    protected CassandraRepositoryBase(IOptions<ICassandraOptions> cassandraOptions, ILogger<CassandraRepositoryBase<T>> logger)
+    protected CassandraRepositoryBase(IOptions<CassandraOptions> cassandraOptions,
+        ILogger<CassandraRepositoryBase<T>> logger)
     {
         _logger = logger;
         var options = cassandraOptions.Value;
@@ -27,51 +29,53 @@ public abstract class CassandraRepositoryBase<T> where T : class
             .AddContactPoint(options.Address)
             .Build()
             .Connect();
-        _table = new Table<T>(session);
-        _table.EnableTracing();
+        Table = new Table<T>(session);
     }
 
-    private void LogTrace(QueryTrace? queryTrace)
+    private void LogQueryTrace(QueryTrace? queryTrace)
     {
-        if (queryTrace != null)
-        {
-            queryTrace.Parameters.TryGetValue("query", out var query);
-            var message = string.Join("\n",
-                queryTrace.Events.Select(e => e.Description));
-            _logger.LogInformation(query + "\n" + message);
-        }
+        if (queryTrace == null) return;
+        queryTrace.Parameters.TryGetValue("query", out var query);
+        var message = string.Join(Environment.NewLine,
+            queryTrace.Events.Select(e => e.Description));
+        _logger.LogInformation(query + Environment.NewLine + message);
     }
 
-    private void LogQuery(CqlQuery<T> query)
+    protected async Task<IEnumerable<T>> ExecuteQueryAsync(CqlQuery<T> query)
     {
-        LogTrace(query.QueryTrace);
-    }
-    
-    private void LogCommand(CqlCommand query)
-    {
-        LogTrace(query.QueryTrace);
-    }
-
-    protected async Task<T[]> GetByFilterAsync(Expression<Func<T, bool>> filter)
-    {
-        var query = _table.Where(filter);
         query.EnableTracing();
         var result = await query.ExecuteAsync();
-        LogQuery(query);
-        return result.ToArray();
+        LogQueryTrace(query.QueryTrace);
+        return result;
     }
 
-    public async Task<T[]> GetAllAsync()
+    protected async Task<IEnumerable<TQuery>> ExecuteQueryAsync<TQuery>(CqlQuery<TQuery> query)
     {
-        var result = await _table.ExecuteAsync();
-        return result.ToArray();
+        query.EnableTracing();
+        var result = await query.ExecuteAsync();
+        LogQueryTrace(query.QueryTrace);
+        return result;
     }
-
-    protected async Task AddAsync(T entity)
+    
+    protected async Task ExecuteQueryAsync(CqlDelete query)
     {
-        var query = _table.Insert(entity);
         query.EnableTracing();
         await query.ExecuteAsync();
-        LogCommand(query);
+        LogQueryTrace(query.QueryTrace);
+    }
+    
+    protected async Task AddAsync(T entity)
+    {
+        var query = Table.Insert(entity);
+        query.EnableTracing();
+        await query.ExecuteAsync();
+        LogQueryTrace(query.QueryTrace);
+    }
+    
+    protected async Task UpdateAsync(CqlUpdate query)
+    {
+        query.EnableTracing();
+        await query.ExecuteAsync();
+        LogQueryTrace(query.QueryTrace);
     }
 }

@@ -1,43 +1,66 @@
-using System;
-using System.Diagnostics;
-using Cassandra;
-using Cassandra.Mapping;
-using Cassandra.Mapping.TypeConversion;
-using Domain;
-using Domain.Migrations;
-using Domain.Models;
+using System.Text;
+using Domain.Middlewares;
+using Domain.Options;
 using Domain.Repositories;
 using Domain.Services;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
+using Domain.Validators;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 
-var cassandraOptions = new CassandraOptions();
-builder.Configuration.GetSection(nameof(CassandraOptions)).Bind(cassandraOptions);
-builder.Services.Configure<CassandraOptions>(options =>
-    builder.Configuration.GetSection(nameof(CassandraOptions)).Bind(options));
-builder.Services.AddSingleton<ICassandraOptions, CassandraOptions>();
+builder.Services.Configure<CassandraOptions>(builder.Configuration.GetRequiredSection("Cassandra"));
+builder.Services.Configure<JwtOptions>(builder.Configuration.GetRequiredSection("Jwt"));
 
-var cassandraMigrationService = new CassandraMigrationService(cassandraOptions);
-using (cassandraMigrationService)
-    cassandraMigrationService.ApplyMigrations();
 
 builder.Logging.AddConsole();
+builder.Services.AddMemoryCache();
+builder.Services.AddSingleton<ICredentialValidator, CredentialValidator>();
+builder.Services.AddSingleton<IUserValidator, UserValidator>();
 builder.Services.AddSingleton<IUserRepository, UserRepository>();
-builder.Services.AddSingleton<IResourceCredentialRepository, ResourceCredentialRepository>();
+builder.Services.AddSingleton<ICredentialHistoryRepository, CredentialHistoryRepository>();
+builder.Services.AddSingleton<ICredentialRepository, CredentialRepository>();
+builder.Services.AddSingleton<ITokenBlackListRepository, TokenBlackListRepository>();
 builder.Services.AddTransient<IUserService, UserService>();
-builder.Services.AddTransient<ICredentialManagerService, CredentialManagerService>();
+builder.Services.AddTransient<ICredentialService, CredentialService>();
+builder.Services.AddSingleton<ITokenService, TokenService>();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-var app = builder.Build();
 
+var key = Encoding.ASCII.GetBytes(builder.Configuration["Jwt:Key"]);
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+}).AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = builder.Configuration["Jwt:Issuer"],
+        ValidAudience = builder.Configuration["Jwt:Audience"],
+        IssuerSigningKey = new SymmetricSecurityKey(key)
+    };
+});
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowOrigin", policyBuilder =>
+    {
+        policyBuilder.WithOrigins("http://localhost:3000")
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+    });
+});
+
+var app = builder.Build();
+app.UseCors("AllowOrigin");
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -45,7 +68,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
+app.UseMiddleware<TokenBlackListMiddleware>();
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

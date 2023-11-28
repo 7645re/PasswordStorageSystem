@@ -1,63 +1,48 @@
+using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
+using Cassandra.Data.Linq;
 using Domain.Models;
+using Domain.Options;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace Domain.Repositories;
 
-public class UserRepository : CassandraRepositoryBase<User>, IUserRepository
+public class UserRepository : CassandraRepositoryBase<UserEntity>, IUserRepository
 {
-
-    public UserRepository(IOptions<CassandraOptions> cassandraOptions, ILogger<UserRepository> logger) : base(cassandraOptions, logger)
+    public UserRepository(IOptions<CassandraOptions> cassandraOptions, ILogger<UserRepository> logger) : base(
+        cassandraOptions, logger)
     {
     }
 
-    public async Task<User?> GetByLoginAsync(string login)
+    public async Task<IEnumerable<UserEntity>> GetAllUsersAsync()
     {
-        var result = await GetByFilterAsync(user => user.Login == login);
-        return result.Length switch
-        {
-            0 => null,
-            1 => result.Single(),
-            _ => throw new DataException()
-        };
+        return await ExecuteQueryAsync(Table);
     }
 
-    public async Task<bool> UserExistAsync(string login, string password)
+    public async Task<UserEntity?> GetUserAsync(string login)
     {
-        var result = await GetByLoginAsync(login);
-        return result?.Password == password;
+        var result = await ExecuteQueryAsync(Table.Where(r => r.Login == login));
+        result = result.ToArray();
+        if (!result.Any()) return null;
+        if (result.Count() > 1) throw new DataException("Scheme error");
+        return result.Single();
     }
 
-    public async Task<bool> UserExistByLoginAsync(string login)
+    public async Task DeleteUserAsync(string login)
     {
-        var result = await GetByLoginAsync(login);
-        return result != null;
+        await ExecuteQueryAsync(Table.Where(r => r.Login == login).Delete());
     }
 
-    public async Task<string> GetPasswordByLoginAsync(string login)
+    public async Task CreateUserAsync(UserEntity userEntity)
     {
-        var result = await GetByFilterAsync(user => user.Login == login);
-        return result.Single().Login ?? throw new DataException();
+        await AddAsync(userEntity);
     }
 
-    public async Task ChangePasswordByLoginAsync(string login, string password)
+    public async Task ChangePasswordAsync(string login, string newPassword)
     {
-        await AddAsync(new User
-        {
-            Login = login,
-            Password = password
-        });
-    }
-
-    public async Task CreateUserAsync(string login, string password)
-    {
-        await AddAsync(new User
-        {
-            Login = login,
-            Password = password
-        });
+        await UpdateAsync(Table.Where(r => r.Login == login).Select(r => new {Password = newPassword}).Update());
     }
 }
