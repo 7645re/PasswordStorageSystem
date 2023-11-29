@@ -1,8 +1,10 @@
 using Domain.Constants;
 using Domain.DTO;
+using Domain.Enums;
 using Domain.Models;
 using Domain.Repositories;
 using Domain.Validators;
+using Microsoft.Extensions.Logging;
 
 namespace Domain.Services;
 
@@ -10,32 +12,58 @@ public class CredentialService : ICredentialService
 {
     private readonly ICredentialRepository _credentialRepository;
     private readonly ICredentialHistoryRepository _credentialHistoryRepository;
-    private readonly IUserRepository _userRepository;
     private readonly ICredentialValidator _credentialValidator;
+    private readonly IPasswordLevelCalculatorService _passwordLevelCalculatorService;
+    private readonly ILogger<CredentialService> _logger;
+    private readonly IUserService _userService;
     private readonly Random _random = new();
 
-    public CredentialService(ICredentialRepository credentialRepository,
-        IUserRepository userRepository, ICredentialValidator credentialValidator,
-        ICredentialHistoryRepository credentialHistoryRepository)
+    public CredentialService(ICredentialRepository credentialRepository, ICredentialValidator credentialValidator,
+        ICredentialHistoryRepository credentialHistoryRepository,
+        IPasswordLevelCalculatorService passwordLevelCalculatorService,
+        ILogger<CredentialService> logger, IUserService userService)
     {
         _credentialRepository = credentialRepository;
-        _userRepository = userRepository;
         _credentialValidator = credentialValidator;
         _credentialHistoryRepository = credentialHistoryRepository;
+        _passwordLevelCalculatorService = passwordLevelCalculatorService;
+        _logger = logger;
+        _userService = userService;
+    }
+
+    public async Task<OperationResult<long>> GetCredentialsCountAsync(string userLogin)
+    {
+        var result = await _credentialRepository.GetCountAsync(userLogin);
+        return new OperationResult<long>
+        {
+            IsSuccess = true,
+            Result = result
+        };
+    }
+
+    public async Task<OperationResult<IDictionary<PasswordSecurityLevel, long>>> GetPasswordsLevelsInfoAsync(
+        string userLogin)
+    {
+        var result = await _credentialRepository.GetPasswordsLevelsInfoAsync(userLogin);
+        return new OperationResult<IDictionary<PasswordSecurityLevel, long>>
+        {
+            IsSuccess = true,
+            Result = result
+        };
     }
 
     public async Task<OperationResult<IEnumerable<Credential>>> GetCredentialsAsync(string userLogin)
     {
-        var user = await _userRepository.GetUserAsync(userLogin);
-        if (user == null)
+        var user = await _userService.GetUserAsync(userLogin);
+        if (!user.IsSuccess)
             return new OperationResult<IEnumerable<Credential>>
             {
                 IsSuccess = false,
-                ErrorMessage = "User doesnt exist"
+                ErrorMessage = user.ErrorMessage
             };
         var credentialsEntity = await _credentialRepository.GetCredentialsAsync(userLogin);
         var credentialsHistoriesItemsEntities = await _credentialHistoryRepository.GetHistoryItemByUserAsync(userLogin);
-        
+
         var credentialDictionary = credentialsEntity.ToDictionary(
             credential => (credential.ResourceName, credential.ResourceLogin),
             credential => new Credential
@@ -43,8 +71,9 @@ public class CredentialService : ICredentialService
                 ResourceName = credential.ResourceName,
                 ResourceLogin = credential.ResourceLogin,
                 ResourcePassword = credential.ResourcePassword,
-                CreateAt = credential.CreatedAt,
-                ChangeAt = credential.ChangeAt.ToLocalTime(),
+                CreateAt = credential.CreatedAt.ToLocalTime(),
+                ChangeAt = credential.ChangeAt != null ? credential.CreatedAt.ToLocalTime() : null,
+                PasswordSecurityLevel = credential.PasswordSecurityLevel,
                 History = Array.Empty<CredentialHistoryItem>()
             }
         );
@@ -87,12 +116,12 @@ public class CredentialService : ICredentialService
     public async Task<OperationResult> DeleteCredentialAsync(string userLogin, string resourceName,
         string resourceLogin)
     {
-        var user = await _userRepository.GetUserAsync(userLogin);
-        if (user == null)
+        var user = await _userService.GetUserAsync(userLogin);
+        if (!user.IsSuccess)
             return new OperationResult
             {
                 IsSuccess = false,
-                ErrorMessage = $"User {userLogin} doesnt exist"
+                ErrorMessage = user.ErrorMessage
             };
 
         var credential = await _credentialRepository.GetCredentialAsync(userLogin, resourceName, resourceLogin);
@@ -112,12 +141,12 @@ public class CredentialService : ICredentialService
 
     public async Task<OperationResult> DeleteResourceCredentialsAsync(string userLogin, string resourceName)
     {
-        var user = await _userRepository.GetUserAsync(userLogin);
-        if (user == null)
+        var user = await _userService.GetUserAsync(userLogin);
+        if (!user.IsSuccess)
             return new OperationResult
             {
                 IsSuccess = false,
-                ErrorMessage = $"User {userLogin} doesnt exist"
+                ErrorMessage = user.ErrorMessage
             };
 
         var credential = await _credentialRepository.GetCredentialsAsync(userLogin, resourceName);
@@ -137,12 +166,12 @@ public class CredentialService : ICredentialService
 
     public async Task<OperationResult> DeleteAllCredentialsAsync(string userLogin)
     {
-        var user = await _userRepository.GetUserAsync(userLogin);
-        if (user == null)
+        var user = await _userService.GetUserAsync(userLogin);
+        if (!user.IsSuccess)
             return new OperationResult
             {
                 IsSuccess = false,
-                ErrorMessage = $"User {userLogin} doesnt exist"
+                ErrorMessage = user.ErrorMessage
             };
 
         var credential = await _credentialRepository.GetCredentialsAsync(userLogin);
@@ -162,12 +191,12 @@ public class CredentialService : ICredentialService
 
     public async Task<OperationResult<CredentialEntity>> CreateCredentialAsync(CredentialCreate credentialCreate)
     {
-        var user = await _userRepository.GetUserAsync(credentialCreate.UserLogin);
-        if (user == null)
+        var user = await _userService.GetUserAsync(credentialCreate.UserLogin);
+        if (!user.IsSuccess)
             return new OperationResult<CredentialEntity>
             {
                 IsSuccess = false,
-                ErrorMessage = $"User {credentialCreate.UserLogin} doesnt exist"
+                ErrorMessage = user.ErrorMessage
             };
 
         var validateResult = _credentialValidator.Validate(credentialCreate);
@@ -186,6 +215,8 @@ public class CredentialService : ICredentialService
                 IsSuccess = false,
                 ErrorMessage = "Credential already exist"
             };
+        var passwordLevel =
+            await _passwordLevelCalculatorService.CalculateLevelAsync(credentialCreate.ResourcePassword);
 
         var newCredential = new CredentialEntity
         {
@@ -193,8 +224,8 @@ public class CredentialService : ICredentialService
             ResourceName = credentialCreate.ResourceName,
             ResourceLogin = credentialCreate.ResourceLogin,
             ResourcePassword = credentialCreate.ResourcePassword,
-            CreatedAt = DateTimeOffset.Now,
-            ChangeAt = DateTimeOffset.Now
+            PasswordSecurityLevel = passwordLevel,
+            CreatedAt = DateTimeOffset.Now
         };
         await _credentialRepository.CreateCredentialAsync(newCredential);
 
@@ -207,19 +238,26 @@ public class CredentialService : ICredentialService
 
     public async Task<OperationResult<List<CredentialEntity>>> GenerateCredentialsAsync(string userLogin, int count)
     {
-        var user = await _userRepository.GetUserAsync(userLogin);
-        if (user == null)
+        var user = await _userService.GetUserAsync(userLogin);
+        if (!user.IsSuccess)
             return new OperationResult<List<CredentialEntity>>
             {
                 IsSuccess = false,
-                ErrorMessage = $"User {userLogin} doesnt exist"
+                ErrorMessage = user.ErrorMessage
             };
 
         var newCredentials = new List<CredentialEntity>();
         for (var i = 0; i < count; i++)
         {
-            var credential = await GenerateCredentialAsync(userLogin);
-            newCredentials.Add(credential);
+            try
+            {
+                var credential = await GenerateCredentialAsync(userLogin);
+                newCredentials.Add(credential);
+            }
+            catch (ArgumentException e)
+            {
+                _logger.LogInformation(e.Message);
+            }
         }
 
         return new OperationResult<List<CredentialEntity>>
@@ -232,14 +270,19 @@ public class CredentialService : ICredentialService
     private async Task<CredentialEntity> GenerateCredentialAsync(string userLogin)
     {
         var createdAt = DateTimeOffset.Now.AddTicks(-_random.NextInt64(0, 77760000000001));
+        var password = new string(Enumerable
+            .Repeat("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789", _random.Next(8, 15))
+            .Select(s => s[new Random().Next(s.Length)]).ToArray());
+        var passwordLevel =
+            await _passwordLevelCalculatorService.CalculateLevelAsync(password);
         var newCredential = new CredentialEntity
         {
             UserLogin = userLogin,
             ResourceName = Resources.Names[_random.Next(0, Resources.Names.Length)],
             ResourceLogin = Resources.Logins[_random.Next(0, Resources.Logins.Length)],
-            ResourcePassword = Guid.NewGuid().ToString(),
-            CreatedAt = createdAt,
-            ChangeAt = createdAt
+            ResourcePassword = password,
+            PasswordSecurityLevel = passwordLevel,
+            CreatedAt = createdAt
         };
 
         var credential = await _credentialRepository.GetCredentialAsync(newCredential.UserLogin,
@@ -253,12 +296,12 @@ public class CredentialService : ICredentialService
 
     public async Task<OperationResult<CredentialEntity>> UpdateCredentialAsync(CredentialUpdate credentialUpdate)
     {
-        var user = await _userRepository.GetUserAsync(credentialUpdate.UserLogin);
-        if (user == null)
+        var user = await _userService.GetUserAsync(credentialUpdate.UserLogin);
+        if (!user.IsSuccess)
             return new OperationResult<CredentialEntity>
             {
                 IsSuccess = false,
-                ErrorMessage = $"User {credentialUpdate.UserLogin} doesnt exist"
+                ErrorMessage = user.ErrorMessage
             };
 
         var validateResult = _credentialValidator.Validate(credentialUpdate);
@@ -284,7 +327,10 @@ public class CredentialService : ICredentialService
                 IsSuccess = false,
                 ErrorMessage = "Credential already have this password",
             };
-        
+
+        var passwordLevel =
+            await _passwordLevelCalculatorService.CalculateLevelAsync(credentialUpdate.NewResourcePassword);
+
         var newCredential = new CredentialEntity
         {
             UserLogin = credentialUpdate.UserLogin,
@@ -292,6 +338,7 @@ public class CredentialService : ICredentialService
             ResourceLogin = credentialUpdate.ResourceLogin,
             ResourcePassword = credentialUpdate.NewResourcePassword,
             CreatedAt = credential.CreatedAt,
+            PasswordSecurityLevel = passwordLevel,
             ChangeAt = DateTimeOffset.Now
         };
         await _credentialRepository.UpdateCredentialAsync(newCredential);

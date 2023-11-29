@@ -1,3 +1,5 @@
+using Domain.Enums;
+
 namespace Domain.DTO;
 
 public class Credential
@@ -6,6 +8,7 @@ public class Credential
     public string ResourceLogin { get; init; }
     public string ResourcePassword { get; init; }
     public DateTimeOffset CreateAt { get; init; }
-    public DateTimeOffset ChangeAt { get; init; }
+    public DateTimeOffset? ChangeAt { get; init; }
     public IEnumerable<CredentialHistoryItem>? History { get; set; }
+    public PasswordSecurityLevel PasswordSecurityLevel { get; init; }
 }

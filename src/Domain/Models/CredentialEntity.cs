@@ -1,5 +1,5 @@
-using System;
 using Cassandra.Mapping.Attributes;
+using Domain.Enums;
 
 namespace Domain.Models;
 
@@ -18,12 +18,17 @@ public class CredentialEntity
     [Column("resource_login")]
     public string ResourceLogin { get; set; }
 
+    [SecondaryIndex]
     [Column("resource_password")]
     public string ResourcePassword { get; set; }
+    
+    [SecondaryIndex]
+    [Column("password_security_level", Type = typeof(int))]
+    public PasswordSecurityLevel PasswordSecurityLevel { get; set; }
     
     [Column("created_at")]
     public DateTimeOffset CreatedAt { get; set; }
     
     [Column("changed_at")]
-    public DateTimeOffset ChangeAt { get; set; }
+    public DateTimeOffset? ChangeAt { get; set; }
 }

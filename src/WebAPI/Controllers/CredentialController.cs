@@ -20,6 +20,20 @@ public class CredentialController : ControllerBase
         _credentialService = credentialService;
     }
 
+    [HttpGet("count")]
+    public async Task<IActionResult> GetCredentialsCountAsync(string userLogin)
+    {
+        var result = await _credentialService.GetCredentialsCountAsync(userLogin);
+        return Ok(result);
+    }
+    
+    [HttpGet("passwordsSecurityLevels")]
+    public async Task<IActionResult> GetPasswordsLevelsInfoAsync(string userLogin)
+    {
+        var result = await _credentialService.GetPasswordsLevelsInfoAsync(userLogin);
+        return Ok(result);
+    }    
+    
     [HttpGet]
     public async Task<IActionResult> GetCredentialsAsync(string userLogin)
     {

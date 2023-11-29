@@ -1,6 +1,5 @@
 import styles from "./index.module.css";
 import useLocalStorage from "../../hooks/useLocalStorage";
-import CircleProgress from "../../components/CircleProgress";
 
 export default function Index() {
     return (
@@ -24,23 +23,31 @@ export default function Index() {
                             </div>
                         </div>
                     </div>
-                    <div className={styles.visualizationBlock}>
-                        <div className={styles.visualizationItem}>
-                            <CircleProgress percent={10} notProgressColor={"white"} progressColor={"red"}/>
-                            <span>Украденные</span>
+                    <div className={styles.passwordIndicators}>
+                        <div className={styles.passwordIndicator}>
+                            <div className={`${styles.indicatorCircle} ${styles.greenIndicator}`}>
+                                <span>78</span>
+                            </div>
+                            <span className={styles.indicatorLabel}>Надежные</span>
                         </div>
-                        <div className={styles.visualizationItem}>
-                            <CircleProgress percent={10} notProgressColor={"white"} progressColor={"#fee10f"}/>
-                            <span>Ненадежные</span>
+                        <div className={styles.passwordIndicator}>
+                            <div className={`${styles.indicatorCircle} ${styles.yellowIndicator}`}>
+                                <span>78</span>
+                            </div>
+                            <span className={styles.indicatorLabel}>Устаревшие или слабые</span>
                         </div>
-                        <div className={styles.visualizationItem}>
-                            <CircleProgress percent={10} notProgressColor={"white"} progressColor={"green"}/>
-                            <span>Надежные</span>
+                        <div className={styles.passwordIndicator}>
+                            <div className={`${styles.indicatorCircle} ${styles.redIndicator}`}>
+                                <span>78</span>
+                            </div>
+                            <span className={styles.indicatorLabel}>Украденные</span>
                         </div>
                     </div>
                 </div>
-                <div className={styles.passwordExplorer}>
-                    
+                <div className={styles.credentialsExplorer}>
+                    <div className={styles.addCredential}>
+                        
+                    </div>
                 </div>
             </div>
         </div>

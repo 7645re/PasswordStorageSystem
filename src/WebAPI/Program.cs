@@ -6,6 +6,7 @@ using Domain.Services;
 using Domain.Validators;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,6 +17,7 @@ builder.Services.Configure<JwtOptions>(builder.Configuration.GetRequiredSection(
 builder.Logging.AddConsole();
 builder.Services.AddMemoryCache();
 builder.Services.AddSingleton<ICredentialValidator, CredentialValidator>();
+builder.Services.AddSingleton<IPasswordLevelCalculatorService, PasswordLevelCalculatorService>();
 builder.Services.AddSingleton<IUserValidator, UserValidator>();
 builder.Services.AddSingleton<IUserRepository, UserRepository>();
 builder.Services.AddSingleton<ICredentialHistoryRepository, CredentialHistoryRepository>();
@@ -27,7 +29,30 @@ builder.Services.AddSingleton<ITokenService, TokenService>();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        In = ParameterLocation.Header,
+        Description = "Please insert JWT with Bearer into field",
+        Name = "Authorization",
+        Type = SecuritySchemeType.ApiKey
+    });
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            new string[] { }
+        }
+    });
+});
 
 
 var key = Encoding.ASCII.GetBytes(builder.Configuration["Jwt:Key"]);

@@ -38,12 +38,13 @@ public class UserService : IUserService
             };
 
         var validToken = await _tokenBlackListRepository.ValidateTokenAsync(userResult.Result.Token);
-        if (!validToken) return new OperationResult<TokenInfo>
-        {
-            IsSuccess = false,
-            ErrorMessage = "Your Access Token Is Blacklisted"
-        };
-        
+        if (!validToken)
+            return new OperationResult<TokenInfo>
+            {
+                IsSuccess = false,
+                ErrorMessage = "Your Access Token Is Blacklisted"
+            };
+
         return new OperationResult<TokenInfo>
         {
             IsSuccess = true,
@@ -68,7 +69,7 @@ public class UserService : IUserService
             return new OperationResult<UserEntity>
             {
                 IsSuccess = false,
-                ErrorMessage = $"User {userLogin} doesnt exist",
+                ErrorMessage = $"User {userLogin} doesnt exist"
             };
 
         return new OperationResult<UserEntity>

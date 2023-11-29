@@ -1,5 +1,6 @@
 using System.Data;
 using Cassandra.Data.Linq;
+using Domain.Enums;
 using Domain.Models;
 using Domain.Options;
 using Microsoft.Extensions.Logging;
@@ -80,12 +81,18 @@ public class CredentialRepository : CassandraRepositoryBase<CredentialEntity>, I
         await _credentialHistoryRepository.DeleteAllUserHistoryItemsByResourceAsync(userLogin, resourceName);
     }
 
+    public async Task<bool> PasswordExistAsync(string password)
+    {
+        return (await ExecuteQueryAsync(
+            Table.Where(r => r.ResourcePassword == password).Select(r => r.ResourcePassword))).Any();
+    }
+
     public async Task UpdateCredentialAsync(CredentialEntity newCredentialEntity)
     {
         var oldCredential = (await ExecuteQueryAsync(Table
-            .Where(r => r.UserLogin == newCredentialEntity.UserLogin &&
-                        r.ResourceName == newCredentialEntity.ResourceName &&
-                        r.ResourceLogin == newCredentialEntity.ResourceLogin)))
+                .Where(r => r.UserLogin == newCredentialEntity.UserLogin &&
+                            r.ResourceName == newCredentialEntity.ResourceName &&
+                            r.ResourceLogin == newCredentialEntity.ResourceLogin)))
             .Single() ?? throw new DataException("Scheme error");
 
         await UpdateAsync(Table
@@ -95,10 +102,43 @@ public class CredentialRepository : CassandraRepositoryBase<CredentialEntity>, I
             .Select(r => new CredentialEntity
             {
                 ResourcePassword = newCredentialEntity.ResourcePassword,
-                ChangeAt = newCredentialEntity.ChangeAt
+                ChangeAt = newCredentialEntity.ChangeAt,
+                PasswordSecurityLevel = newCredentialEntity.PasswordSecurityLevel
             })
             .Update());
 
         await _credentialHistoryRepository.CreateHistoryItemAsync(oldCredential);
+    }
+
+    public async Task<long> GetCountAsync(string userLogin)
+    {
+        return await ExecuteScalarQueryAsync(Table
+            .Where(r => r.UserLogin == userLogin)
+            .Count());
+    }
+
+    public async Task<Dictionary<PasswordSecurityLevel, long>> GetPasswordsLevelsInfoAsync(string userLogin)
+    {
+        var result = new Dictionary<PasswordSecurityLevel, long>();
+        // ReSharper disable once ReplaceWithSingleCallToCount
+        var secureLevel = await ExecuteScalarQueryAsync(Table
+            .Where(r => r.PasswordSecurityLevel == PasswordSecurityLevel.Secure
+                && r.UserLogin == userLogin)
+            .Count());
+        // ReSharper disable once ReplaceWithSingleCallToCount
+        var insecureLevel = await ExecuteScalarQueryAsync(Table
+            .Where(r => r.PasswordSecurityLevel == PasswordSecurityLevel.Insecure
+                && r.UserLogin == userLogin)
+            .Count());
+        // ReSharper disable once ReplaceWithSingleCallToCount
+        var compromisedLevel = await ExecuteScalarQueryAsync(Table
+            .Where(r => r.PasswordSecurityLevel == PasswordSecurityLevel.Compromised
+                && r.UserLogin == userLogin)
+            .Count());
+
+        result[PasswordSecurityLevel.Secure] = secureLevel;
+        result[PasswordSecurityLevel.Insecure] = insecureLevel;
+        result[PasswordSecurityLevel.Compromised] = compromisedLevel;
+        return result;
     }
 }

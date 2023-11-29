@@ -1,5 +1,4 @@
-using System.Collections.Generic;
-using System.Threading.Tasks;
+using Domain.Enums;
 using Domain.Models;
 
 namespace Domain.Repositories;
@@ -16,4 +15,7 @@ public interface ICredentialRepository
     Task UpdateCredentialAsync(CredentialEntity newCredentialEntity);
     Task DeleteAllCredentialsAsync(string userLogin);
     Task DeleteResourceCredentialsAsync(string userLogin, string resourceName);
+    Task<bool> PasswordExistAsync(string password);
+    Task<Dictionary<PasswordSecurityLevel, long>> GetPasswordsLevelsInfoAsync(string userLogin);
+    Task<long> GetCountAsync(string userLogin);
 }
