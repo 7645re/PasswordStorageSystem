@@ -21,7 +21,7 @@ public class CredentialHistoryRepository : CassandraRepositoryBase<CredentialHis
             ResourceName = credentialEntity.ResourceName,
             ResourceLogin = credentialEntity.ResourceLogin,
             ResourcePassword = credentialEntity.ResourcePassword,
-            ChangeAt = credentialEntity.ChangeAt ?? throw new InvalidOperationException("No change time specified")
+            ChangeAt = DateTimeOffset.Now
         });
     }
 
