@@ -113,10 +113,9 @@ public class CredentialService : ICredentialService
         };
     }
 
-    public async Task<OperationResult> DeleteCredentialAsync(string userLogin, string resourceName,
-        string resourceLogin)
+    public async Task<OperationResult> DeleteCredentialAsync(CredentialDelete credentialDelete)
     {
-        var user = await _userService.GetUserAsync(userLogin);
+        var user = await _userService.GetUserAsync(credentialDelete.UserLogin);
         if (!user.IsSuccess)
             return new OperationResult
             {
@@ -124,7 +123,8 @@ public class CredentialService : ICredentialService
                 ErrorMessage = user.ErrorMessage
             };
 
-        var credential = await _credentialRepository.GetCredentialAsync(userLogin, resourceName, resourceLogin);
+        var credential = await _credentialRepository.GetCredentialAsync(credentialDelete.UserLogin,
+            credentialDelete.ResourceName, credentialDelete.ResourceLogin);
         if (credential == null)
             return new OperationResult
             {
@@ -132,7 +132,8 @@ public class CredentialService : ICredentialService
                 ErrorMessage = "Credential doesnt exist"
             };
 
-        await _credentialRepository.DeleteCredentialAsync(userLogin, resourceName, resourceLogin);
+        await _credentialRepository.DeleteCredentialAsync(credentialDelete.UserLogin,
+            credentialDelete.ResourceName, credentialDelete.ResourceLogin);
         return new OperationResult
         {
             IsSuccess = true
@@ -273,8 +274,7 @@ public class CredentialService : ICredentialService
         var password = new string(Enumerable
             .Repeat("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789", _random.Next(8, 15))
             .Select(s => s[new Random().Next(s.Length)]).ToArray());
-        var passwordLevel =
-            await _passwordLevelCalculatorService.CalculateLevelAsync(password);
+        var passwordLevel = await _passwordLevelCalculatorService.CalculateLevelAsync(password);
         var newCredential = new CredentialEntity
         {
             UserLogin = userLogin,

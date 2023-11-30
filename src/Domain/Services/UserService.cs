@@ -1,4 +1,5 @@
 using Domain.DTO;
+using Domain.Mappers;
 using Domain.Models;
 using Domain.Repositories;
 using Domain.Validators;
@@ -21,24 +22,33 @@ public class UserService : IUserService
         _tokenBlackListRepository = tokenBlackListRepository;
     }
 
-    public async Task<OperationResult<TokenInfo>> GetUserByLoginAndPasswordAsync(string userLogin, string password)
+    public async Task<OperationResult<TokenInfo>> GetUserTokenAsync(UserSearch userSearch)
     {
-        var userResult = await GetUserAsync(userLogin);
+        var userResult = await GetUserAsync(userSearch.UserLogin);
         if (!userResult.IsSuccess)
             return new OperationResult<TokenInfo>
             {
                 IsSuccess = false,
                 ErrorMessage = userResult.ErrorMessage
             };
-        if (userResult.Result.Password != password)
+        if (userResult.Result.Password != userSearch.Password)
             return new OperationResult<TokenInfo>
             {
                 IsSuccess = false,
                 ErrorMessage = "Invalid password"
             };
-
-        var validToken = await _tokenBlackListRepository.ValidateTokenAsync(userResult.Result.Token);
-        if (!validToken)
+        
+        if (userResult.Result.Token == null)
+            return new OperationResult<TokenInfo>
+            {
+                IsSuccess = false,
+                ErrorMessage = "User dont have token, please login"
+            };
+        if (userResult.Result.TokenExpire == null)
+            throw new InvalidOperationException($"User {userResult.Result.Login} token doesnt have date of expire");
+        
+        var tokenIsValid = await _tokenBlackListRepository.ValidateTokenAsync(userResult.Result.Token);
+        if (!tokenIsValid)
             return new OperationResult<TokenInfo>
             {
                 IsSuccess = false,
@@ -48,34 +58,34 @@ public class UserService : IUserService
         return new OperationResult<TokenInfo>
         {
             IsSuccess = true,
-            Result = new TokenInfo(userResult.Result.Token, userResult.Result.TokenExpire)
+            Result = new TokenInfo(userResult.Result.Token, (DateTimeOffset)userResult.Result.TokenExpire)
         };
     }
 
-    public async Task<OperationResult<IEnumerable<UserEntity>>> GetAllUsersAsync()
+    public async Task<OperationResult<IEnumerable<User>>> GetAllUsersAsync()
     {
-        var users = await _userRepository.GetAllUsersAsync();
-        return new OperationResult<IEnumerable<UserEntity>>
+        var userEntities = await _userRepository.GetAllUsersAsync();
+        return new OperationResult<IEnumerable<User>>
         {
             IsSuccess = true,
-            Result = users
+            Result = userEntities.Select(ue => ue.ToUser())
         };
     }
 
-    public async Task<OperationResult<UserEntity>> GetUserAsync(string userLogin)
+    public async Task<OperationResult<User>> GetUserAsync(string userLogin)
     {
-        var user = await _userRepository.GetUserAsync(userLogin);
-        if (user == null)
-            return new OperationResult<UserEntity>
+        var userEntity = await _userRepository.GetUserAsync(userLogin);
+        if (userEntity == null)
+            return new OperationResult<User>
             {
                 IsSuccess = false,
                 ErrorMessage = $"User {userLogin} doesnt exist"
             };
 
-        return new OperationResult<UserEntity>
+        return new OperationResult<User>
         {
             IsSuccess = true,
-            Result = user
+            Result = userEntity.ToUser()
         };
     }
 
@@ -96,17 +106,17 @@ public class UserService : IUserService
         };
     }
 
-    public async Task<OperationResult<TokenInfo>> CreateUserAsync(string userLogin, string password)
+    public async Task<OperationResult<TokenInfo>> CreateUserAsync(UserCreate userCreate)
     {
-        var userResult = await GetUserAsync(userLogin);
+        var userResult = await GetUserAsync(userCreate.Login);
         if (userResult.IsSuccess)
             return new OperationResult<TokenInfo>
             {
                 IsSuccess = false,
-                ErrorMessage = $"User with login {userLogin} already exist"
+                ErrorMessage = $"User with login {userCreate.Login} already exist"
             };
 
-        var validateResult = _userValidator.Validate(userLogin, password);
+        var validateResult = _userValidator.Validate(userCreate);
         if (!validateResult.IsSuccess)
             return new OperationResult<TokenInfo>
             {
@@ -114,22 +124,17 @@ public class UserService : IUserService
                 ErrorMessage = validateResult.ErrorMessage
             };
 
-        var token = _tokenService.GenerateToken(userLogin);
-        await _userRepository.CreateUserAsync(new UserEntity
-        {
-            Login = userLogin,
-            Password = password,
-            Token = token.Token,
-            TokenExpire = token.Expire
-        });
+        var tokenInfo = _tokenService.GenerateToken(userCreate.Login);
+        await _userRepository.CreateUserAsync(userCreate.ToUserEntity(tokenInfo.Token, tokenInfo.Expire));
+
         return new OperationResult<TokenInfo>
         {
             IsSuccess = true,
-            Result = token
+            Result = tokenInfo
         };
     }
 
-    public async Task<OperationResult> ChangePasswordAsync(string userLogin, string password)
+    public async Task<OperationResult> ChangePasswordAsync(string userLogin, string newPassword)
     {
         var userResult = await GetUserAsync(userLogin);
         if (!userResult.IsSuccess)
@@ -139,7 +144,14 @@ public class UserService : IUserService
                 ErrorMessage = userResult.ErrorMessage
             };
 
-        var validateResult = _userValidator.Validate(userLogin, password);
+        if (userResult.Result.Password == newPassword)
+            return new OperationResult
+            {
+                IsSuccess = false,
+                ErrorMessage = "You already have have this password"
+            };
+        
+        var validateResult = _userValidator.ValidatePassword(newPassword);
         if (!validateResult.IsSuccess)
             return new OperationResult
             {
@@ -147,14 +159,7 @@ public class UserService : IUserService
                 ErrorMessage = validateResult.ErrorMessage
             };
 
-        if (userResult.Result.Password == password)
-            return new OperationResult
-            {
-                IsSuccess = false,
-                ErrorMessage = "You already have have this password"
-            };
-
-        await _userRepository.ChangePasswordAsync(userLogin, password);
+        await _userRepository.ChangePasswordAsync(userLogin, newPassword);
         return new OperationResult
         {
             IsSuccess = true

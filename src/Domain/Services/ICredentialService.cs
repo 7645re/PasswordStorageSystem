@@ -9,7 +9,7 @@ namespace Domain.Services;
 public interface ICredentialService
 {
     Task<OperationResult<IEnumerable<Credential>>> GetCredentialsAsync(string userLogin);
-    Task<OperationResult> DeleteCredentialAsync(string userLogin, string resourceName, string resourceLogin);
+    Task<OperationResult> DeleteCredentialAsync(CredentialDelete credentialDelete);
     Task<OperationResult> DeleteResourceCredentialsAsync(string userLogin, string resourceName);
     Task<OperationResult> DeleteAllCredentialsAsync(string userLogin);
     Task<OperationResult<CredentialEntity>> CreateCredentialAsync(CredentialCreate credentialCreate);
