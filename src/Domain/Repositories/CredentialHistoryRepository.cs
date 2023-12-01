@@ -1,4 +1,5 @@
 using Cassandra.Data.Linq;
+using Domain.Mappers;
 using Domain.Models;
 using Domain.Options;
 using Microsoft.Extensions.Logging;
@@ -6,26 +7,22 @@ using Microsoft.Extensions.Options;
 
 namespace Domain.Repositories;
 
-public class CredentialHistoryRepository : CassandraRepositoryBase<CredentialHistoryItemEntity>, ICredentialHistoryRepository
+public class CredentialHistoryRepository : CassandraRepositoryBase<CredentialHistoryItemEntity>,
+    ICredentialHistoryRepository
 {
     public CredentialHistoryRepository(IOptions<CassandraOptions> cassandraOptions,
-        ILogger<CassandraRepositoryBase<CredentialHistoryItemEntity>> logger) : base(cassandraOptions, logger)
+        ILogger<CassandraRepositoryBase<CredentialHistoryItemEntity>> logger) 
+        : base(cassandraOptions, logger)
     {
     }
 
     public async Task CreateHistoryItemAsync(CredentialEntity credentialEntity)
     {
-        await AddAsync(new CredentialHistoryItemEntity
-        {
-            UserLogin = credentialEntity.UserLogin,
-            ResourceName = credentialEntity.ResourceName,
-            ResourceLogin = credentialEntity.ResourceLogin,
-            ResourcePassword = credentialEntity.ResourcePassword,
-            ChangeAt = DateTimeOffset.Now
-        });
+        await AddAsync(credentialEntity.ToCredentialHistoryItemEntity());
     }
 
-    public async Task<IEnumerable<CredentialHistoryItemEntity>> GetHistoryItemByCredentialAsync(CredentialEntity credentialEntity)
+    public async Task<IEnumerable<CredentialHistoryItemEntity>> GetHistoryItemByCredentialAsync(
+        CredentialEntity credentialEntity)
     {
         return await ExecuteQueryAsync(Table.Where(r => r.UserLogin == credentialEntity.UserLogin
                                                  && r.ResourceName == credentialEntity.ResourceName
@@ -38,7 +35,10 @@ public class CredentialHistoryRepository : CassandraRepositoryBase<CredentialHis
         return await ExecuteQueryAsync(Table.Where(r => r.UserLogin == userLogin));
     }
 
-    public async Task DeleteHistoryItemAsync(string userLogin, string resourceName, string resourceLogin,
+    public async Task DeleteHistoryItemAsync(
+        string userLogin,
+        string resourceName,
+        string resourceLogin,
         string resourcePassword)
     {
         await ExecuteQueryAsync(Table
@@ -56,7 +56,9 @@ public class CredentialHistoryRepository : CassandraRepositoryBase<CredentialHis
             .Delete());
     }
 
-    public async Task DeleteAllUserHistoryItemsByResourceAsync(string userLogin, string resourceName)
+    public async Task DeleteAllUserHistoryItemsByResourceAsync(
+        string userLogin,
+        string resourceName)
     {
         await ExecuteQueryAsync(Table
             .Where(r => r.UserLogin == userLogin
@@ -64,7 +66,9 @@ public class CredentialHistoryRepository : CassandraRepositoryBase<CredentialHis
             .Delete());
     }
 
-    public async Task DeleteAllHistoryItemsByCredentialAsync(string userLogin, string resourceName,
+    public async Task DeleteAllHistoryItemsByCredentialAsync(
+        string userLogin,
+        string resourceName,
         string resourceLogin)
     {
         await ExecuteQueryAsync(Table

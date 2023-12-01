@@ -1,3 +1,4 @@
+using Cassandra.Mapping;
 using Cassandra.Mapping.Attributes;
 using Domain.Enums;
 
@@ -8,19 +9,19 @@ public class CredentialEntity
 {
     [PartitionKey]
     [Column("user_login")]
-    public string UserLogin { get; set; }
+    public string UserLogin { get; set; } = string.Empty;
 
-    [ClusteringKey(1)]
+    [ClusteringKey(1, SortOrder.Ascending)]
     [Column("resource_name")]
-    public string ResourceName { get; set; }
+    public string ResourceName { get; set; } = string.Empty;
 
-    [ClusteringKey(2)]
+    [ClusteringKey(2, SortOrder.Ascending)]
     [Column("resource_login")]
-    public string ResourceLogin { get; set; }
+    public string ResourceLogin { get; set; } = string.Empty;
 
     [SecondaryIndex]
     [Column("resource_password")]
-    public string ResourcePassword { get; set; }
+    public string ResourcePassword { get; set; } = string.Empty;
     
     [SecondaryIndex]
     [Column("password_security_level", Type = typeof(int))]

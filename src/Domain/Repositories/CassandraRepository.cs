@@ -20,13 +20,14 @@ public abstract class CassandraRepositoryBase<T> where T : class
         var session = Cluster
             .Builder()
             .WithCredentials(options.UserName, options.Password)
-            .WithDefaultKeyspace(options.KeySpace)
             .WithPort(options.Port)
             .AddContactPoint(options.Address)
             .Build()
             .Connect();
+        session.CreateKeyspaceIfNotExists(options.KeySpace);
+        session.ChangeKeyspace(options.KeySpace);
         Table = new Table<T>(session);
-        Table.CreateIfNotExistsAsync();
+        Table.CreateIfNotExists();
     }
 
     private void LogQueryTrace(QueryTrace? queryTrace)

@@ -1,5 +1,3 @@
-using System.Threading.Tasks;
-
 using Domain.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

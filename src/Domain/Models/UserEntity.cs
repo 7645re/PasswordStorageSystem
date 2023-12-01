@@ -7,13 +7,13 @@ public class UserEntity
 {
     [PartitionKey]
     [Column("login")]
-    public string Login { get; set; }
+    public string Login { get; set; } = string.Empty;
         
     [Column("password")]
-    public string Password { get; set; }
+    public string Password { get; set; } = string.Empty;
 
     [Column("jwt_token")] 
-    public string Token { get; set; }
+    public string Token { get; set; } = string.Empty;
 
     [Column("token_expire")]
     public DateTimeOffset TokenExpire { get; set; }

@@ -5,13 +5,18 @@ namespace WebAPI.Mappers;
 
 public static class UserMapper
 {
-    public static UserCreate ToUserCreate(this UserCreateRequest userCreateRequest)
+    public static UserCreate ToUserCreate(this UserRegisterRequest userRegisterRequest)
     {
-        return new UserCreate(userCreateRequest.Login, userCreateRequest.Password);
+        return new UserCreate(userRegisterRequest.Login, userRegisterRequest.Password);
+    }
+
+    public static UserChangePassword ToUserChangePassword(this UserChangePasswordRequest userChangePasswordRequest)
+    {
+        return new UserChangePassword(userChangePasswordRequest.Login, userChangePasswordRequest.NewPassword);
     }
     
-    public static UserSearch ToUserCreate(this UserSearchRequest userSearchRequest)
+    public static UserLogIn ToUserLogIn(this UserLogInRequest userLogInRequest)
     {
-        return new UserSearch(userSearchRequest.Login, userSearchRequest.Password);
+        return new UserLogIn(userLogInRequest.Login, userLogInRequest.Password);
     }
 }

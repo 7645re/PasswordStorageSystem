@@ -1,3 +1,7 @@
 namespace Domain.DTO;
 
-public record CredentialCreate(string UserLogin, string ResourceName, string ResourceLogin, string ResourcePassword);
+public record CredentialCreate(
+    string UserLogin,
+    string ResourceName,
+    string ResourceLogin,
+    string ResourcePassword);

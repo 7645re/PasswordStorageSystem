@@ -1,3 +1,5 @@
 namespace Domain.DTO;
 
-public record TokenInfo(string Token, DateTimeOffset Expire);
+public record TokenInfo(
+    string Token,
+    DateTimeOffset Expire);

@@ -13,8 +13,11 @@ public class TokenBlackListMiddleware
     private readonly ILogger<TokenBlackListMiddleware> _logger;
     private readonly ITokenBlackListRepository _tokenBlackListRepository;
 
-    public TokenBlackListMiddleware(RequestDelegate next, IMemoryCache tokenBlackList,
-        ILogger<TokenBlackListMiddleware> logger, ITokenBlackListRepository tokenBlackListRepository)
+    public TokenBlackListMiddleware(
+        RequestDelegate next,
+        IMemoryCache tokenBlackList,
+        ILogger<TokenBlackListMiddleware> logger,
+        ITokenBlackListRepository tokenBlackListRepository)
     {
         _next = next;
         _tokenBlackList = tokenBlackList;

@@ -7,7 +7,7 @@ public class TokenBlackListEntity
 {
     [PartitionKey]
     [Column("jwt_token")]
-    public string Token { get; set; }
+    public string Token { get; set; } = string.Empty;
     
     [Column("expire")]
     public DateTimeOffset Expire { get; set; }

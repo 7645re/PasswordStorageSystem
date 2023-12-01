@@ -2,6 +2,7 @@ using Domain.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WebAPI.DTO.Request;
+using WebAPI.Mappers;
 
 namespace WebAPI.Controllers;
 
@@ -26,9 +27,9 @@ public class UserController : ControllerBase
 
     [AllowAnonymous]
     [HttpPost("login")]
-    public async Task<IActionResult> LoginAsync([FromBody] UserSearchRequest userSearchRequest)
+    public async Task<IActionResult> LogInAsync([FromBody] UserLogInRequest userLogInRequest)
     {
-        var result = await _userService.GetUserAsync(userSearchRequest.Login);
+        var result = await _userService.GetUserTokenAsync(userLogInRequest.ToUserLogIn());
         if (!result.IsSuccess) return BadRequest(result);
 
         return Ok(result);
@@ -36,14 +37,14 @@ public class UserController : ControllerBase
 
     [AllowAnonymous]
     [HttpPost("register")]
-    public async Task<IActionResult> RegisterAsync([FromBody] UserCreateRequest userCreateRequest)
+    public async Task<IActionResult> RegisterAsync([FromBody] UserRegisterRequest userRegisterRequest)
     {
-        var result = await _userService.CreateUserAsync(userCreateRequest.Login, userCreateRequest.Password);
+        var result = await _userService.CreateUserAsync(userRegisterRequest.ToUserCreate());
         if (!result.IsSuccess) return BadRequest(result);
 
         return Ok(result);
     }
-    
+
     [Authorize]
     [HttpGet("info")]
     public async Task<IActionResult> GetUserAsync()
@@ -68,12 +69,13 @@ public class UserController : ControllerBase
 
     [Authorize]
     [HttpPost("password/change")]
-    public async Task<IActionResult> ChangeUserPasswordAsync([FromBody] UserUpdateRequest userUpdateRequest)
+    public async Task<IActionResult> ChangeUserPasswordAsync(
+        [FromBody] UserChangePasswordRequest userChangePasswordRequest)
     {
         var userLogin = User.Identity?.Name;
         if (userLogin == null) return BadRequest("Server error token doesnt have user login");
 
-        var result = await _userService.ChangePasswordAsync(userLogin, userUpdateRequest.NewPassword);
+        var result = await _userService.ChangePasswordAsync(userChangePasswordRequest.ToUserChangePassword());
         return Ok(result);
     }
 }

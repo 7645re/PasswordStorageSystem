@@ -2,8 +2,8 @@ namespace Domain.DTO;
 
 public class User
 {
-    public string Login { get; set; }
-    public string Password { get; set; }
-    public string? Token { get; set; }
-    public DateTimeOffset? TokenExpire { get; set; }
+    public string Login { get; init; } = string.Empty;
+    public string Password { get; init; } = string.Empty;
+    public string? Token { get; init; }
+    public DateTimeOffset? TokenExpire { get; init; }
 }

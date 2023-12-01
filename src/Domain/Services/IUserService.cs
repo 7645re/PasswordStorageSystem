@@ -1,5 +1,4 @@
 using Domain.DTO;
-using Domain.Models;
 
 namespace Domain.Services;
 
@@ -9,6 +8,6 @@ public interface IUserService
     Task<OperationResult<User>> GetUserAsync(string userLogin);
     Task<OperationResult> DeleteUserAsync(string userLogin);
     Task<OperationResult<TokenInfo>> CreateUserAsync(UserCreate userCreate);
-    Task<OperationResult> ChangePasswordAsync(string userLogin, string newPassword);
-    Task<OperationResult<TokenInfo>> GetUserTokenAsync(UserSearch userSearch);
+    Task<OperationResult> ChangePasswordAsync(UserChangePassword userChangePassword);
+    Task<OperationResult<TokenInfo>> GetUserTokenAsync(UserLogIn userLogIn);
 }

@@ -1,6 +1,5 @@
 using Domain.DTO;
 using Domain.Mappers;
-using Domain.Models;
 using Domain.Repositories;
 using Domain.Validators;
 
@@ -22,16 +21,16 @@ public class UserService : IUserService
         _tokenBlackListRepository = tokenBlackListRepository;
     }
 
-    public async Task<OperationResult<TokenInfo>> GetUserTokenAsync(UserSearch userSearch)
+    public async Task<OperationResult<TokenInfo>> GetUserTokenAsync(UserLogIn userLogIn)
     {
-        var userResult = await GetUserAsync(userSearch.UserLogin);
+        var userResult = await GetUserAsync(userLogIn.Login);
         if (!userResult.IsSuccess)
             return new OperationResult<TokenInfo>
             {
                 IsSuccess = false,
                 ErrorMessage = userResult.ErrorMessage
             };
-        if (userResult.Result.Password != userSearch.Password)
+        if (userResult.Result?.Password != userLogIn.Password)
             return new OperationResult<TokenInfo>
             {
                 IsSuccess = false,
@@ -134,9 +133,9 @@ public class UserService : IUserService
         };
     }
 
-    public async Task<OperationResult> ChangePasswordAsync(string userLogin, string newPassword)
+    public async Task<OperationResult> ChangePasswordAsync(UserChangePassword userChangePassword)
     {
-        var userResult = await GetUserAsync(userLogin);
+        var userResult = await GetUserAsync(userChangePassword.Login);
         if (!userResult.IsSuccess)
             return new OperationResult
             {
@@ -144,14 +143,14 @@ public class UserService : IUserService
                 ErrorMessage = userResult.ErrorMessage
             };
 
-        if (userResult.Result.Password == newPassword)
+        if (userResult.Result?.Password == userChangePassword.NewPassword)
             return new OperationResult
             {
                 IsSuccess = false,
                 ErrorMessage = "You already have have this password"
             };
         
-        var validateResult = _userValidator.ValidatePassword(newPassword);
+        var validateResult = _userValidator.ValidatePassword(userChangePassword.NewPassword);
         if (!validateResult.IsSuccess)
             return new OperationResult
             {
@@ -159,7 +158,7 @@ public class UserService : IUserService
                 ErrorMessage = validateResult.ErrorMessage
             };
 
-        await _userRepository.ChangePasswordAsync(userLogin, newPassword);
+        await _userRepository.ChangePasswordAsync(userChangePassword.Login, userChangePassword.NewPassword);
         return new OperationResult
         {
             IsSuccess = true
