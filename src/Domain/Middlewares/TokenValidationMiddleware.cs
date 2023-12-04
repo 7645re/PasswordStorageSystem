@@ -6,17 +6,17 @@ using Microsoft.Extensions.Logging;
 
 namespace Domain.Middlewares;
 
-public class TokenBlackListMiddleware
+public class TokenValidationMiddleware
 {
     private readonly RequestDelegate _next;
     private readonly IMemoryCache _tokenBlackList;
-    private readonly ILogger<TokenBlackListMiddleware> _logger;
+    private readonly ILogger<TokenValidationMiddleware> _logger;
     private readonly ITokenBlackListRepository _tokenBlackListRepository;
 
-    public TokenBlackListMiddleware(
+    public TokenValidationMiddleware(
         RequestDelegate next,
         IMemoryCache tokenBlackList,
-        ILogger<TokenBlackListMiddleware> logger,
+        ILogger<TokenValidationMiddleware> logger,
         ITokenBlackListRepository tokenBlackListRepository)
     {
         _next = next;

@@ -1,8 +1,7 @@
 using System.Collections.Generic;
 using System.Data;
-using System.Linq;
-using System.Threading.Tasks;
 using Cassandra.Data.Linq;
+using Domain.DTO;
 using Domain.Models;
 using Domain.Options;
 using Microsoft.Extensions.Logging;
@@ -44,5 +43,11 @@ public class UserRepository : CassandraRepositoryBase<UserEntity>, IUserReposito
     public async Task ChangePasswordAsync(string login, string newPassword)
     {
         await UpdateAsync(Table.Where(r => r.Login == login).Select(r => new {Password = newPassword}).Update());
+    }
+
+    public async Task ChangeAccessTokenAsync(string login, TokenInfo tokenInfo)
+    {
+        await UpdateAsync(Table.Where(r => r.Login == login)
+            .Select(r => new {AccessToken = tokenInfo.Token, AccessTokenExpire = tokenInfo.Expire}).Update());
     }
 }

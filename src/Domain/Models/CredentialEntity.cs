@@ -11,14 +11,14 @@ public class CredentialEntity
     [Column("user_login")]
     public string UserLogin { get; set; } = string.Empty;
 
-    [ClusteringKey(1, SortOrder.Ascending)]
+    [ClusteringKey(1, SortOrder.Descending)]
     [Column("resource_name")]
     public string ResourceName { get; set; } = string.Empty;
 
-    [ClusteringKey(2, SortOrder.Ascending)]
+    [ClusteringKey(2, SortOrder.Descending)]
     [Column("resource_login")]
     public string ResourceLogin { get; set; } = string.Empty;
-
+    
     [SecondaryIndex]
     [Column("resource_password")]
     public string ResourcePassword { get; set; } = string.Empty;

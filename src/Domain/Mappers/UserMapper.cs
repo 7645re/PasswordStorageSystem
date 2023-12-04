@@ -11,22 +11,21 @@ public static class UserMapper
         {
             Login = userEntity.Login,
             Password = userEntity.Password,
-            Token = userEntity.Token,
-            TokenExpire = userEntity.TokenExpire,
+            Token = userEntity.AccessToken,
+            TokenExpire = userEntity.AccessTokenExpire,
         };
     }
     
     public static UserEntity ToUserEntity(
         this UserCreate userCreate,
-        string token,
-        DateTimeOffset tokenExpire)
+        TokenInfo accessToken)
     {
         return new UserEntity
         {
             Login = userCreate.Login,
             Password = userCreate.Password,
-            Token = token,
-            TokenExpire = tokenExpire
+            AccessToken = accessToken.Token,
+            AccessTokenExpire = accessToken.Expire
         };
     }
 }

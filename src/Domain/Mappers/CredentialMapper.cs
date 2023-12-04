@@ -40,16 +40,16 @@ public static class CredentialMapper
     }
 
     public static CredentialEntity ToCredentialEntity(
-        this CredentialCreate credentialUpdate,
+        this CredentialCreate credentialCreate,
         PasswordSecurityLevel passwordSecurityLevel,
         DateTimeOffset createAt)
     {
         return new CredentialEntity
         {
-            UserLogin = credentialUpdate.UserLogin,
-            ResourceName = credentialUpdate.ResourceName,
-            ResourceLogin = credentialUpdate.ResourceLogin,
-            ResourcePassword = credentialUpdate.ResourcePassword,
+            UserLogin = credentialCreate.UserLogin,
+            ResourceName = credentialCreate.ResourceName,
+            ResourceLogin = credentialCreate.ResourceLogin,
+            ResourcePassword = credentialCreate.ResourcePassword,
             PasswordSecurityLevel = passwordSecurityLevel,
             CreatedAt = createAt,
             ChangeAt = null

@@ -30,8 +30,6 @@ public class UserController : ControllerBase
     public async Task<IActionResult> LogInAsync([FromBody] UserLogInRequest userLogInRequest)
     {
         var result = await _userService.GetUserTokenAsync(userLogInRequest.ToUserLogIn());
-        if (!result.IsSuccess) return BadRequest(result);
-
         return Ok(result);
     }
 
@@ -40,8 +38,6 @@ public class UserController : ControllerBase
     public async Task<IActionResult> RegisterAsync([FromBody] UserRegisterRequest userRegisterRequest)
     {
         var result = await _userService.CreateUserAsync(userRegisterRequest.ToUserCreate());
-        if (!result.IsSuccess) return BadRequest(result);
-
         return Ok(result);
     }
 

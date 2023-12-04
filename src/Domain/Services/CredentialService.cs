@@ -211,7 +211,8 @@ public class CredentialService : ICredentialService
             };
 
         var passwordLevel =
-            await _passwordLevelCalculatorService.CalculateLevelAsync(credentialCreate.ResourcePassword);
+            await _passwordLevelCalculatorService.CalculateLevelAsync(credentialCreate.UserLogin,
+                credentialCreate.ResourcePassword);
         var newCredentialEntity = credentialCreate.ToCredentialEntity(passwordLevel, DateTimeOffset.UtcNow);
         await _credentialRepository.CreateCredentialAsync(newCredentialEntity);
 
@@ -262,7 +263,7 @@ public class CredentialService : ICredentialService
             .Repeat(Resources.AllSymbols, _random.Next(8, 15))
             .Select(s => s[_random.Next(s.Length)])
             .ToArray());
-        var passwordLevel = await _passwordLevelCalculatorService.CalculateLevelAsync(password);
+        var passwordLevel = await _passwordLevelCalculatorService.CalculateLevelAsync(userLogin, password);
         var newCredential = new CredentialEntity
         {
             UserLogin = userLogin,
@@ -320,7 +321,8 @@ public class CredentialService : ICredentialService
             };
 
         var passwordLevel =
-            await _passwordLevelCalculatorService.CalculateLevelAsync(credentialUpdate.NewResourcePassword);
+            await _passwordLevelCalculatorService.CalculateLevelAsync(credentialUpdate.UserLogin,
+                credentialUpdate.NewResourcePassword);
 
         // TODO: maybe changeAt time should be calculated on repository level
         var updatedCredentialEntity = credentialUpdate.ToCredentialEntity(

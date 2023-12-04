@@ -12,9 +12,9 @@ public class UserEntity
     [Column("password")]
     public string Password { get; set; } = string.Empty;
 
-    [Column("jwt_token")] 
-    public string Token { get; set; } = string.Empty;
+    [Column("access_token")] 
+    public string AccessToken { get; set; } = string.Empty;
 
-    [Column("token_expire")]
-    public DateTimeOffset TokenExpire { get; set; }
+    [Column("access_token_expire")]
+    public DateTimeOffset AccessTokenExpire { get; set; }
 }

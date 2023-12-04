@@ -4,5 +4,5 @@ namespace Domain.Services;
 
 public interface ITokenService
 {
-    TokenInfo GenerateToken(string userLogin);
+    TokenInfo GenerateAccessToken(string userLogin);
 }

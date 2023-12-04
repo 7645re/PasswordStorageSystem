@@ -74,7 +74,7 @@ public class CredentialController : ControllerBase
     }
 
     [HttpPost("create")]
-    public async Task<IActionResult> DeleteCredentialAsync([FromBody] CredentialCreateRequest credentialCreateRequest)
+    public async Task<IActionResult> CreateCredentialAsync([FromBody] CredentialCreateRequest credentialCreateRequest)
     {
         var userLogin = User.Identity?.Name;
         if (userLogin == null) return BadRequest("Server error token doesnt have user login");

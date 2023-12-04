@@ -80,7 +80,8 @@ builder.Services.AddCors(options =>
     {
         policyBuilder.WithOrigins("http://localhost:3000")
             .AllowAnyHeader()
-            .AllowAnyMethod();
+            .AllowAnyMethod()
+            .WithExposedHeaders("www-authenticate");
     });
 });
 
@@ -93,7 +94,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-app.UseMiddleware<TokenBlackListMiddleware>();
+app.UseMiddleware<TokenValidationMiddleware>();
 app.UseAuthentication();
 app.UseAuthorization();
 

@@ -13,10 +13,10 @@ public class PasswordLevelCalculatorService : IPasswordLevelCalculatorService
         _credentialRepository = credentialRepository;
     }
     
-    public async Task<PasswordSecurityLevel> CalculateLevelAsync(string password)
+    public async Task<PasswordSecurityLevel> CalculateLevelAsync(string userLogin, string password)
     {
-        var passwordExist = await _credentialRepository.PasswordExistAsync(password);
-        if (passwordExist) return PasswordSecurityLevel.Compromised;
+        var usersHaveThisPassword = await _credentialRepository.FindPasswordDuplicatesAsync(password);
+        if (usersHaveThisPassword.Any(l => l != userLogin)) return PasswordSecurityLevel.Compromised;
         
         var score = 0;
 

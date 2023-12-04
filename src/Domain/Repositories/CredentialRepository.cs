@@ -40,16 +40,6 @@ public class CredentialRepository : CassandraRepositoryBase<CredentialEntity>, I
         return result.Single();
     }
 
-    public async Task<IEnumerable<CredentialEntity>> GetCredentialsDescendingCreatedTimeAsync(string userLogin)
-    {
-        return await ExecuteQueryAsync(Table.Where(r => r.UserLogin == userLogin).OrderByDescending(r => r.CreatedAt));
-    }
-
-    public async Task<IEnumerable<CredentialEntity>> GetCredentialsDescendingChangedTimeAsync(string userLogin)
-    {
-        return await ExecuteQueryAsync(Table.Where(r => r.UserLogin == userLogin).OrderByDescending(r => r.ChangeAt));
-    }
-
     public async Task CreateCredentialAsync(CredentialEntity credentialEntity)
     {
         await AddAsync(credentialEntity);
@@ -81,10 +71,11 @@ public class CredentialRepository : CassandraRepositoryBase<CredentialEntity>, I
         await _credentialHistoryRepository.DeleteAllUserHistoryItemsByResourceAsync(userLogin, resourceName);
     }
 
-    public async Task<bool> PasswordExistAsync(string password)
+    public async Task<IEnumerable<string>> FindPasswordDuplicatesAsync(string password)
     {
-        return (await ExecuteQueryAsync(
-            Table.Where(r => r.ResourcePassword == password).Select(r => r.ResourcePassword))).Any();
+        return await ExecuteQueryAsync(Table
+            .Where(r => r.ResourcePassword == password)
+            .Select(r => r.UserLogin));
     }
 
     public async Task UpdateCredentialAsync(CredentialEntity newCredentialEntity)
@@ -112,6 +103,7 @@ public class CredentialRepository : CassandraRepositoryBase<CredentialEntity>, I
 
     public async Task<long> GetCountAsync(string userLogin)
     {
+        // ReSharper disable once ReplaceWithSingleCallToCount
         return await ExecuteScalarQueryAsync(Table
             .Where(r => r.UserLogin == userLogin)
             .Count());

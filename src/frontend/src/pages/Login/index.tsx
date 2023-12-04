@@ -1,10 +1,12 @@
-import React, { useState, ChangeEvent, FormEvent, SetStateAction, useEffect } from 'react';
-import { Navigate, useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import React, { useState, ChangeEvent, FormEvent, useEffect } from 'react';
+import { Navigate } from 'react-router-dom';
+import { ENDPOINTS } from '../../endpoints';
 import useLocalStorage from '../../hooks/useLocalStorage';
-import styles from './Login.module.css';
+import styles from './index.module.css';
 
 interface FormData {
-    userLogin: string;
+    login: string;
     password: string;
 }
 
@@ -21,34 +23,26 @@ enum FormMode {
     REGISTER = 'REGISTER',
 }
 
-const Login: React.FC = () => {
-    const [formData, setFormData] = useState<FormData>({ userLogin: '', password: '' });
-    const [requestResult, setRequestResult] = useState<ResponseBody | null>(null);
+const Index: React.FC = () => {
+    const [formData, setFormData] = useState<FormData>({ login: '', password: '' });
+    const [logInError, setLogInError] = useState<string | null>(null);
     const [formMode, setFormMode] = useState<FormMode>(FormMode.LOGIN);
     const [token, setToken] = useLocalStorage("token", null)
-    const navigate = useNavigate();
 
     const handleFormSubmit = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         
         try {
-            let url = formMode === FormMode.LOGIN ? 'http://localhost:5164/user/login' : 'http://localhost:5164/user/register';
+            let url = formMode === FormMode.LOGIN ? ENDPOINTS.LOG_IN : ENDPOINTS.REGISTER;
+            let response = await axios.post<ResponseBody>(url, formData);
 
-            const response = await fetch(url, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(formData),
-            });
-
-            let body: ResponseBody = await response.json();
-            setRequestResult(body);
-            if (body.isSuccess) {
-                setToken(body.result.token);
+            if (!response.data.isSuccess) {
+                setLogInError(response.data.errorMessage)
+            } else {
+                setToken(response.data.result.token)
             }
-        } catch (error) {
-            console.error('Произошла ошибка', error);
+        } catch (e) {
+            console.error(e);
         }
     };
 
@@ -59,8 +53,8 @@ const Login: React.FC = () => {
 
     const switchFormMode = () => {
         setFormMode(formMode === FormMode.LOGIN ? FormMode.REGISTER : FormMode.LOGIN);
-        setFormData({ userLogin: '', password: '' });
-        setRequestResult(null);
+        setFormData({ login: '', password: '' });
+        setLogInError(null);
     };
     
     return (
@@ -72,10 +66,10 @@ const Login: React.FC = () => {
                 <div>
                     <input
                         type="text"
-                        id="userLogin"
-                        name="userLogin"
+                        id="login"
+                        name="login"
                         placeholder="Login"
-                        value={formData.userLogin}
+                        value={formData.login}
                         onChange={handleInputChange}
                         className={styles.input}
                     />
@@ -91,7 +85,7 @@ const Login: React.FC = () => {
                         className={styles.input}
                     />
                 </div>
-                <div>{requestResult?.errorMessage}</div>
+                {logInError === null ? "" : <div>{logInError}</div>}
                 <button type="submit">{formMode === FormMode.LOGIN ? 'Sign in' : 'Sign up'}</button>
                 <div>
                 <span onClick={switchFormMode}>
@@ -103,4 +97,4 @@ const Login: React.FC = () => {
     );
 };
 
-export default Login;
+export default Index;

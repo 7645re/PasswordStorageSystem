@@ -1,12 +1,3 @@
-.page {
-    height: 100%;
-    width: 100%;
-    display: flex;
-    flex: 1;
-    justify-content: center;
-    align-items: center;
-}
-
 .systemPanel {
     display: flex;
     border-radius: 20px;
@@ -114,5 +105,44 @@
     padding: 20px;
     border-radius: 20px;
     height: 300px;
-    border: 3px solid #5555ff;
+    display: flex;
+    flex-direction: column;
+}
+
+.addCredential {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex: 0 0;
+}
+
+.credentials {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    gap: 10px;
+    overflow: auto;
+}
+
+.credential {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    padding: 10px;
+    gap: 5px;
+    border-radius: 20px;
+}
+
+.credentialInfoItem {
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.credentialEditButton {
+    background-color: transparent;
+    border: 0;
+    cursor: pointer;
 }

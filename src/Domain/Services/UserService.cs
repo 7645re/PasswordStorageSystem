@@ -36,16 +36,7 @@ public class UserService : IUserService
                 IsSuccess = false,
                 ErrorMessage = "Invalid password"
             };
-        
-        if (userResult.Result.Token == null)
-            return new OperationResult<TokenInfo>
-            {
-                IsSuccess = false,
-                ErrorMessage = "User dont have token, please login"
-            };
-        if (userResult.Result.TokenExpire == null)
-            throw new InvalidOperationException($"User {userResult.Result.Login} token doesnt have date of expire");
-        
+
         var tokenIsValid = await _tokenBlackListRepository.ValidateTokenAsync(userResult.Result.Token);
         if (!tokenIsValid)
             return new OperationResult<TokenInfo>
@@ -54,10 +45,22 @@ public class UserService : IUserService
                 ErrorMessage = "Your Access Token Is Blacklisted"
             };
 
+        if (userResult.Result.TokenExpire < DateTimeOffset.UtcNow)
+        {
+            var accessTokenInfo = _tokenService.GenerateAccessToken(userLogIn.Login);
+            await _userRepository.ChangeAccessTokenAsync(userLogIn.Login, accessTokenInfo);
+            
+            return new OperationResult<TokenInfo>
+            {
+                IsSuccess = true,
+                Result = accessTokenInfo
+            };
+        }
+        
         return new OperationResult<TokenInfo>
         {
             IsSuccess = true,
-            Result = new TokenInfo(userResult.Result.Token, (DateTimeOffset)userResult.Result.TokenExpire)
+            Result = new TokenInfo(userResult.Result.Token, userResult.Result.TokenExpire)
         };
     }
 
@@ -123,13 +126,13 @@ public class UserService : IUserService
                 ErrorMessage = validateResult.ErrorMessage
             };
 
-        var tokenInfo = _tokenService.GenerateToken(userCreate.Login);
-        await _userRepository.CreateUserAsync(userCreate.ToUserEntity(tokenInfo.Token, tokenInfo.Expire));
+        var accessTokenInfo = _tokenService.GenerateAccessToken(userCreate.Login);
+        await _userRepository.CreateUserAsync(userCreate.ToUserEntity(accessTokenInfo));
 
         return new OperationResult<TokenInfo>
         {
             IsSuccess = true,
-            Result = tokenInfo
+            Result = accessTokenInfo
         };
     }
 
