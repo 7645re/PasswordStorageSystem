@@ -1,7 +1,6 @@
 namespace Domain.DTO;
 
 public record CredentialHistoryItem(
-    string ResourceName,
-    string ResourceLogin,
+    Guid CredentialId,
     string ResourcePassword,
-    DateTimeOffset ChangeAt);
+    DateTimeOffset ChangedAt);

@@ -17,14 +17,6 @@ public class UserController : ControllerBase
         _userService = userService;
     }
 
-    [HttpGet]
-    [Authorize]
-    public async Task<IActionResult> GetAllUsers()
-    {
-        var result = await _userService.GetAllUsersAsync();
-        return Ok(result);
-    }
-
     [AllowAnonymous]
     [HttpPost("login")]
     public async Task<IActionResult> LogInAsync([FromBody] UserLogInRequest userLogInRequest)
@@ -42,7 +34,7 @@ public class UserController : ControllerBase
     }
 
     [Authorize]
-    [HttpGet("info")]
+    [HttpGet]
     public async Task<IActionResult> GetUserAsync()
     {
         var userLogin = User.Identity?.Name;
@@ -53,7 +45,7 @@ public class UserController : ControllerBase
     }
 
     [Authorize]
-    [HttpGet("delete")]
+    [HttpDelete]
     public async Task<IActionResult> DeleteUserAsync()
     {
         var userLogin = User.Identity?.Name;
@@ -64,7 +56,7 @@ public class UserController : ControllerBase
     }
 
     [Authorize]
-    [HttpPost("password/change")]
+    [HttpPatch("password")]
     public async Task<IActionResult> ChangeUserPasswordAsync(
         [FromBody] UserChangePasswordRequest userChangePasswordRequest)
     {

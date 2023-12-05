@@ -1,5 +1,4 @@
 using System.Text;
-using Domain.Middlewares;
 using Domain.Options;
 using Domain.Repositories;
 using Domain.Services;
@@ -22,7 +21,6 @@ builder.Services.AddSingleton<IUserValidator, UserValidator>();
 builder.Services.AddSingleton<IUserRepository, UserRepository>();
 builder.Services.AddSingleton<ICredentialHistoryRepository, CredentialHistoryRepository>();
 builder.Services.AddSingleton<ICredentialRepository, CredentialRepository>();
-builder.Services.AddSingleton<ITokenBlackListRepository, TokenBlackListRepository>();
 builder.Services.AddTransient<IUserService, UserService>();
 builder.Services.AddTransient<ICredentialService, CredentialService>();
 builder.Services.AddSingleton<ITokenService, TokenService>();
@@ -94,7 +92,6 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-app.UseMiddleware<TokenValidationMiddleware>();
 app.UseAuthentication();
 app.UseAuthorization();
 

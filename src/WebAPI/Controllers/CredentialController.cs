@@ -28,7 +28,7 @@ public class CredentialController : ControllerBase
         return Ok(result);
     }
     
-    [HttpGet("passwordsSecurityLevels")]
+    [HttpGet("passwords-security-levels")]
     public async Task<IActionResult> GetPasswordsLevelsInfoAsync()
     {
         var userLogin = User.Identity?.Name;
@@ -46,7 +46,14 @@ public class CredentialController : ControllerBase
         return Ok(result);
     }
 
-    [HttpPost("delete")]
+    [HttpGet("{id}/history")]
+    public async Task<IActionResult> GetCredentialHistoryAsync(Guid id)
+    {
+        var result = await _credentialService.GetCredentialHistoryAsync(id);
+        return Ok(result);
+    }
+
+    [HttpDelete]
     public async Task<IActionResult> DeleteCredentialAsync([FromBody] CredentialDeleteRequest credentialDeleteRequest)
     {
         var userLogin = User.Identity?.Name;
@@ -55,25 +62,7 @@ public class CredentialController : ControllerBase
         return Ok(result);
     }
 
-    [HttpGet("delete")]
-    public async Task<IActionResult> DeleteCredentialByResourceAsync([FromQuery] string resourceName)
-    {
-        var userLogin = User.Identity?.Name;
-        if (userLogin == null) return BadRequest("Server error token doesnt have user login");
-        var result = await _credentialService.DeleteResourceCredentialsAsync(userLogin, resourceName);
-        return Ok(result);
-    }
-
-    [HttpPost("delete/all")]
-    public async Task<IActionResult> DeleteCredentialAsync()
-    {
-        var userLogin = User.Identity?.Name;
-        if (userLogin == null) return BadRequest("Server error token doesnt have user login");
-        var result = await _credentialService.DeleteAllCredentialsAsync(userLogin);
-        return Ok(result);
-    }
-
-    [HttpPost("create")]
+    [HttpPost]
     public async Task<IActionResult> CreateCredentialAsync([FromBody] CredentialCreateRequest credentialCreateRequest)
     {
         var userLogin = User.Identity?.Name;
@@ -91,7 +80,7 @@ public class CredentialController : ControllerBase
         return Ok(result);
     }
 
-    [HttpPost("update")]
+    [HttpPatch]
     public async Task<IActionResult> UpdateCredentialAsync([FromBody] CredentialUpdateRequest credentialUpdateRequest)
     {
         var userLogin = User.Identity?.Name;

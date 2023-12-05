@@ -14,18 +14,18 @@ public static class CredentialMapper
             ResourceName = credentialEntity.ResourceName,
             ResourceLogin = credentialEntity.ResourceLogin,
             ResourcePassword = credentialEntity.ResourcePassword,
-            CreateAt = credentialEntity.CreatedAt.ToLocalTime(),
-            ChangeAt = credentialEntity.ChangeAt?.ToLocalTime(),
-            History = Array.Empty<CredentialHistoryItem>(),
-            PasswordSecurityLevel = credentialEntity.PasswordSecurityLevel
+            CreatedAt = credentialEntity.CreatedAt.ToLocalTime(),
+            ChangedAt = credentialEntity.ChangedAt?.ToLocalTime(),
+            PasswordSecurityLevel = credentialEntity.PasswordSecurityLevel,
+            Id = credentialEntity.Id
         };
     }
 
     public static CredentialEntity ToCredentialEntity(
         this CredentialUpdate credentialUpdate,
         PasswordSecurityLevel passwordSecurityLevel,
-        DateTimeOffset createAt,
-        DateTimeOffset changeAt)
+        DateTimeOffset createdAt,
+        DateTimeOffset changedAt)
     {
         return new CredentialEntity
         {
@@ -34,15 +34,16 @@ public static class CredentialMapper
             ResourceLogin = credentialUpdate.ResourceLogin,
             ResourcePassword = credentialUpdate.NewResourcePassword,
             PasswordSecurityLevel = passwordSecurityLevel,
-            CreatedAt = createAt,
-            ChangeAt = changeAt
+            CreatedAt = createdAt,
+            ChangedAt = changedAt
         };
     }
 
     public static CredentialEntity ToCredentialEntity(
         this CredentialCreate credentialCreate,
         PasswordSecurityLevel passwordSecurityLevel,
-        DateTimeOffset createAt)
+        DateTimeOffset createdAt,
+        Guid id)
     {
         return new CredentialEntity
         {
@@ -51,8 +52,9 @@ public static class CredentialMapper
             ResourceLogin = credentialCreate.ResourceLogin,
             ResourcePassword = credentialCreate.ResourcePassword,
             PasswordSecurityLevel = passwordSecurityLevel,
-            CreatedAt = createAt,
-            ChangeAt = null
+            CreatedAt = createdAt,
+            Id = id,
+            ChangedAt = null
         };
     }
 
@@ -60,10 +62,9 @@ public static class CredentialMapper
         this CredentialHistoryItemEntity credentialHistoryItemEntity)
     {
         return new CredentialHistoryItem(
-            credentialHistoryItemEntity.ResourceName,
-            credentialHistoryItemEntity.ResourceLogin,
+            credentialHistoryItemEntity.CredentialId,
             credentialHistoryItemEntity.ResourcePassword,
-            credentialHistoryItemEntity.ChangeAt.ToLocalTime()
+            credentialHistoryItemEntity.ChangedAt.ToLocalTime()
         );
     }
 
@@ -72,11 +73,14 @@ public static class CredentialMapper
     {
         return new CredentialHistoryItemEntity
         {
-            UserLogin = credentialEntity.UserLogin,
-            ResourceName = credentialEntity.ResourceName,
-            ResourceLogin = credentialEntity.ResourceLogin,
+            CredentialId = credentialEntity.Id,
             ResourcePassword = credentialEntity.ResourcePassword,
-            ChangeAt = DateTimeOffset.UtcNow
+            ChangedAt = DateTimeOffset.UtcNow
         };
+    }
+
+    public static CredentialUpdated ToCredentialUpdated(this CredentialEntity credentialEntity, DateTimeOffset changedAt)
+    {
+        return new CredentialUpdated(credentialEntity.ResourcePassword, changedAt.ToLocalTime(), credentialEntity.PasswordSecurityLevel);
     }
 }

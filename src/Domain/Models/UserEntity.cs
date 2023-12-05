@@ -2,7 +2,7 @@ using Cassandra.Mapping.Attributes;
 
 namespace Domain.Models;
 
-[Table("users", Keyspace = "my_keyspace")]
+[Table("users", Keyspace = "password_storage_system")]
 public class UserEntity
 {
     [PartitionKey]

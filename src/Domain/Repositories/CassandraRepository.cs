@@ -70,12 +70,31 @@ public abstract class CassandraRepositoryBase<T> where T : class
         LogQueryTrace(query.QueryTrace);
     }
     
+    protected async Task ExecuteAsBatchAsync(IReadOnlyCollection<CqlCommand> commands)
+    {
+        // The library does not allow you to get a query trace from a executed batch
+        var batch = Table
+            .GetSession()
+            .CreateBatch()
+            .Append(commands);
+        await batch.ExecuteAsync();
+
+        _logger.LogInformation(batch.ToString());
+    }
+    
     protected async Task AddAsync(T entity)
     {
         var query = Table.Insert(entity);
         query.EnableTracing();
         await query.ExecuteAsync();
         LogQueryTrace(query.QueryTrace);
+    }
+    
+    protected CqlCommand AddQuery(T entity)
+    {
+        var query = Table.Insert(entity);
+        query.EnableTracing();
+        return query;
     }
     
     protected async Task UpdateAsync(CqlUpdate query)

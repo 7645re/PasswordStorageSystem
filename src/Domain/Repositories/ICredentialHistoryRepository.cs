@@ -1,3 +1,4 @@
+using Cassandra.Data.Linq;
 using Domain.Models;
 
 namespace Domain.Repositories;
@@ -6,17 +7,11 @@ public interface ICredentialHistoryRepository
 {
     Task CreateHistoryItemAsync(CredentialEntity credentialEntity);
 
-    Task DeleteHistoryItemAsync(string userLogin, string resourceName, string resourceLogin,
-        string resourcePassword);
+    Task DeleteHistoryByCredentialIdAsync(Guid credentialId);
 
-    Task DeleteAllHistoryItemsByCredentialAsync(string userLogin, string resourceName,
-        string resourceLogin);
+    CqlCommand DeleteHistoryByCredentialIdQuery(Guid credentialId);
 
-    Task DeleteAllUserHistoryItemsAsync(string userLogin);
+    Task<IEnumerable<CredentialHistoryItemEntity>> GetHistoryByCredentialIdAsync(Guid credentialId);
 
-    Task DeleteAllUserHistoryItemsByResourceAsync(string userLogin, string resourceName);
-
-    Task<IEnumerable<CredentialHistoryItemEntity>> GetHistoryItemByCredentialAsync(CredentialEntity credentialEntity);
-
-    Task<IEnumerable<CredentialHistoryItemEntity>> GetHistoryItemByUserAsync(string userLogin);
+    CqlCommand CreateHistoryItemQuery(CredentialEntity credentialEntity);
 }

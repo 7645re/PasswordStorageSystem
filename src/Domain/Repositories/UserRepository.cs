@@ -16,11 +16,6 @@ public class UserRepository : CassandraRepositoryBase<UserEntity>, IUserReposito
     {
     }
 
-    public async Task<IEnumerable<UserEntity>> GetAllUsersAsync()
-    {
-        return await ExecuteQueryAsync(Table);
-    }
-
     public async Task<UserEntity?> GetUserAsync(string login)
     {
         var result = await ExecuteQueryAsync(Table.Where(r => r.Login == login));

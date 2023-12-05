@@ -9,7 +9,7 @@ public static class CredentialMapper
         string userLogin)
     {
         return new CredentialDelete(userLogin, credentialDeleteRequest.ResourceName,
-            credentialDeleteRequest.ResourceLogin);
+            credentialDeleteRequest.ResourceLogin, credentialDeleteRequest.CredentialId);
     }
     
     public static CredentialCreate ToCredentialCreate(this CredentialCreateRequest credentialCreateRequest,

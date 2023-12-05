@@ -4,25 +4,28 @@ using Domain.Enums;
 
 namespace Domain.Models;
 
-[Table("credentials", Keyspace = "my_keyspace")]
+[Table("credentials", Keyspace = "password_storage_system")]
 public class CredentialEntity
 {
     [PartitionKey]
     [Column("user_login")]
     public string UserLogin { get; set; } = string.Empty;
 
-    [ClusteringKey(1, SortOrder.Descending)]
+    [ClusteringKey(0, SortOrder.Descending)]
     [Column("resource_name")]
     public string ResourceName { get; set; } = string.Empty;
 
-    [ClusteringKey(2, SortOrder.Descending)]
+    [ClusteringKey(1, SortOrder.Descending)]
     [Column("resource_login")]
     public string ResourceLogin { get; set; } = string.Empty;
     
     [SecondaryIndex]
     [Column("resource_password")]
     public string ResourcePassword { get; set; } = string.Empty;
-    
+
+    [Column("id")]
+    public Guid Id { get; set; }
+
     [SecondaryIndex]
     [Column("password_security_level", Type = typeof(int))]
     public PasswordSecurityLevel PasswordSecurityLevel { get; set; }
@@ -31,5 +34,5 @@ public class CredentialEntity
     public DateTimeOffset CreatedAt { get; set; }
     
     [Column("changed_at")]
-    public DateTimeOffset? ChangeAt { get; set; }
+    public DateTimeOffset? ChangedAt { get; set; }
 }

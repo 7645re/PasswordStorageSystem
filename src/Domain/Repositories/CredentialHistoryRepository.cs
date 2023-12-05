@@ -20,61 +20,24 @@ public class CredentialHistoryRepository : CassandraRepositoryBase<CredentialHis
     {
         await AddAsync(credentialEntity.ToCredentialHistoryItemEntity());
     }
-
-    public async Task<IEnumerable<CredentialHistoryItemEntity>> GetHistoryItemByCredentialAsync(
-        CredentialEntity credentialEntity)
+    
+    public CqlCommand CreateHistoryItemQuery(CredentialEntity credentialEntity)
     {
-        return await ExecuteQueryAsync(Table.Where(r => r.UserLogin == credentialEntity.UserLogin
-                                                 && r.ResourceName == credentialEntity.ResourceName
-                                                 && r.ResourceLogin == credentialEntity.ResourceLogin
-                                                 && r.ResourcePassword == credentialEntity.ResourcePassword));
+        return AddQuery(credentialEntity.ToCredentialHistoryItemEntity());
+    }
+
+    public async Task<IEnumerable<CredentialHistoryItemEntity>> GetHistoryByCredentialIdAsync(Guid credentialId)
+    {
+        return await ExecuteQueryAsync(Table.Where(r => r.CredentialId == credentialId));
     }
     
-    public async Task<IEnumerable<CredentialHistoryItemEntity>> GetHistoryItemByUserAsync(string userLogin)
+    public async Task DeleteHistoryByCredentialIdAsync(Guid credentialId)
     {
-        return await ExecuteQueryAsync(Table.Where(r => r.UserLogin == userLogin));
+        await ExecuteQueryAsync(Table.Where(r => r.CredentialId == credentialId));
     }
-
-    public async Task DeleteHistoryItemAsync(
-        string userLogin,
-        string resourceName,
-        string resourceLogin,
-        string resourcePassword)
+    
+    public CqlCommand DeleteHistoryByCredentialIdQuery(Guid credentialId)
     {
-        await ExecuteQueryAsync(Table
-            .Where(r => r.UserLogin == userLogin
-                        && r.ResourceName == resourceName
-                        && r.ResourceLogin == resourceLogin
-                        && r.ResourcePassword == resourcePassword)
-            .Delete());
-    }
-
-    public async Task DeleteAllUserHistoryItemsAsync(string userLogin)
-    {
-        await ExecuteQueryAsync(Table
-            .Where(r => r.UserLogin == userLogin)
-            .Delete());
-    }
-
-    public async Task DeleteAllUserHistoryItemsByResourceAsync(
-        string userLogin,
-        string resourceName)
-    {
-        await ExecuteQueryAsync(Table
-            .Where(r => r.UserLogin == userLogin
-                        && r.ResourceName == resourceName)
-            .Delete());
-    }
-
-    public async Task DeleteAllHistoryItemsByCredentialAsync(
-        string userLogin,
-        string resourceName,
-        string resourceLogin)
-    {
-        await ExecuteQueryAsync(Table
-            .Where(r => r.UserLogin == userLogin
-                        && r.ResourceName == resourceName
-                        && r.ResourceLogin == resourceLogin)
-            .Delete());
+        return Table.Where(r => r.CredentialId == credentialId).Delete();
     }
 }

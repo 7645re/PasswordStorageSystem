@@ -12,9 +12,8 @@ public class CredentialRepository : CassandraRepositoryBase<CredentialEntity>, I
 {
     private readonly ICredentialHistoryRepository _credentialHistoryRepository;
 
-    public CredentialRepository(IOptions<CassandraOptions> cassandraOptions,
-        ILogger<CredentialRepository> logger, ICredentialHistoryRepository credentialHistoryRepository) : base(
-        cassandraOptions, logger)
+    public CredentialRepository(IOptions<CassandraOptions> cassandraOptions, ILogger<CredentialRepository> logger,
+        ICredentialHistoryRepository credentialHistoryRepository) : base(cassandraOptions, logger)
     {
         _credentialHistoryRepository = credentialHistoryRepository;
     }
@@ -24,13 +23,7 @@ public class CredentialRepository : CassandraRepositoryBase<CredentialEntity>, I
         return await ExecuteQueryAsync(Table.Where(r => r.UserLogin == userLogin));
     }
 
-    public async Task<IEnumerable<CredentialEntity>> GetCredentialsAsync(string userLogin, string resourceName)
-    {
-        return await ExecuteQueryAsync(Table.Where(r => r.UserLogin == userLogin && r.ResourceName == resourceName));
-    }
-
-    public async Task<CredentialEntity?> GetCredentialAsync(string userLogin, string resourceName,
-        string resourceLogin)
+    public async Task<CredentialEntity?> GetCredentialAsync(string userLogin, string resourceName, string resourceLogin)
     {
         var result = await ExecuteQueryAsync(Table.Where(r =>
             r.UserLogin == userLogin && r.ResourceName == resourceName && r.ResourceLogin == resourceLogin));
@@ -45,87 +38,84 @@ public class CredentialRepository : CassandraRepositoryBase<CredentialEntity>, I
         await AddAsync(credentialEntity);
     }
 
-    public async Task DeleteCredentialAsync(string userLogin, string resourceName, string resourceLogin)
+    public async Task DeleteCredentialAsync(
+        string userLogin,
+        string resourceName,
+        string resourceLogin,
+        Guid credentialId)
     {
-        await ExecuteQueryAsync(Table
-            .Where(r => r.UserLogin == userLogin && r.ResourceName == resourceName && r.ResourceLogin == resourceLogin)
-            .Delete());
-        await _credentialHistoryRepository.DeleteAllHistoryItemsByCredentialAsync(userLogin, resourceName,
-            resourceLogin);
-    }
-
-    public async Task DeleteAllCredentialsAsync(string userLogin)
-    {
-        await ExecuteQueryAsync(Table
-            .Where(r => r.UserLogin == userLogin)
-            .Delete());
-        await _credentialHistoryRepository.DeleteAllUserHistoryItemsAsync(userLogin);
-    }
-
-    public async Task DeleteResourceCredentialsAsync(string userLogin, string resourceName)
-    {
-        await ExecuteQueryAsync(Table
-            .Where(r => r.UserLogin == userLogin && r.ResourceName == resourceName)
-            .Delete());
-
-        await _credentialHistoryRepository.DeleteAllUserHistoryItemsByResourceAsync(userLogin, resourceName);
+        var deleteUserQuery = Table.Where(r =>
+                r.UserLogin == userLogin
+                && r.ResourceName == resourceName
+                && r.ResourceLogin == resourceLogin)
+            .Delete();
+        var deleteCredentialHistoryItemsQuery =  _credentialHistoryRepository
+            .DeleteHistoryByCredentialIdQuery(credentialId);
+        var batchQueries = new[]
+        {
+            deleteUserQuery,
+            deleteCredentialHistoryItemsQuery
+        };
+        
+        await ExecuteAsBatchAsync(batchQueries);
     }
 
     public async Task<IEnumerable<string>> FindPasswordDuplicatesAsync(string password)
     {
-        return await ExecuteQueryAsync(Table
-            .Where(r => r.ResourcePassword == password)
-            .Select(r => r.UserLogin));
+        return await ExecuteQueryAsync(Table.Where(r => r.ResourcePassword == password).Select(r => r.UserLogin));
     }
 
     public async Task UpdateCredentialAsync(CredentialEntity newCredentialEntity)
     {
-        var oldCredential = (await ExecuteQueryAsync(Table
-                .Where(r => r.UserLogin == newCredentialEntity.UserLogin &&
-                            r.ResourceName == newCredentialEntity.ResourceName &&
-                            r.ResourceLogin == newCredentialEntity.ResourceLogin)))
-            .Single() ?? throw new DataException("Scheme error");
+        var oldCredential = (await ExecuteQueryAsync(Table.Where(r =>
+            r.UserLogin == newCredentialEntity.UserLogin 
+            && r.ResourceName == newCredentialEntity.ResourceName
+            && r.ResourceLogin == newCredentialEntity.ResourceLogin))).Single() 
+                            ?? throw new DataException("Scheme error");
 
-        await UpdateAsync(Table
+        var updateCredentialQuery = Table
             .Where(r => r.UserLogin == newCredentialEntity.UserLogin &&
                         r.ResourceName == newCredentialEntity.ResourceName &&
                         r.ResourceLogin == newCredentialEntity.ResourceLogin)
             .Select(r => new CredentialEntity
             {
                 ResourcePassword = newCredentialEntity.ResourcePassword,
-                ChangeAt = newCredentialEntity.ChangeAt,
+                ChangedAt = newCredentialEntity.ChangedAt,
                 PasswordSecurityLevel = newCredentialEntity.PasswordSecurityLevel
             })
-            .Update());
+            .Update();
+        var createCredentialHistoryItemQuery = _credentialHistoryRepository
+            .CreateHistoryItemQuery(oldCredential);
 
-        await _credentialHistoryRepository.CreateHistoryItemAsync(oldCredential);
+        var batchQueries = new[]
+        {
+            updateCredentialQuery,
+            createCredentialHistoryItemQuery
+        };
+        
+        await ExecuteAsBatchAsync(batchQueries);
     }
 
     public async Task<long> GetCountAsync(string userLogin)
     {
         // ReSharper disable once ReplaceWithSingleCallToCount
-        return await ExecuteScalarQueryAsync(Table
-            .Where(r => r.UserLogin == userLogin)
-            .Count());
+        return await ExecuteScalarQueryAsync(Table.Where(r => r.UserLogin == userLogin).Count());
     }
 
     public async Task<Dictionary<PasswordSecurityLevel, long>> GetPasswordsLevelsInfoAsync(string userLogin)
     {
         var result = new Dictionary<PasswordSecurityLevel, long>();
         // ReSharper disable once ReplaceWithSingleCallToCount
-        var secureLevel = await ExecuteScalarQueryAsync(Table
-            .Where(r => r.PasswordSecurityLevel == PasswordSecurityLevel.Secure
-                && r.UserLogin == userLogin)
+        var secureLevel = await ExecuteScalarQueryAsync(Table.Where(r =>
+                r.PasswordSecurityLevel == PasswordSecurityLevel.Secure && r.UserLogin == userLogin)
             .Count());
         // ReSharper disable once ReplaceWithSingleCallToCount
-        var insecureLevel = await ExecuteScalarQueryAsync(Table
-            .Where(r => r.PasswordSecurityLevel == PasswordSecurityLevel.Insecure
-                && r.UserLogin == userLogin)
+        var insecureLevel = await ExecuteScalarQueryAsync(Table.Where(r =>
+                r.PasswordSecurityLevel == PasswordSecurityLevel.Insecure && r.UserLogin == userLogin)
             .Count());
         // ReSharper disable once ReplaceWithSingleCallToCount
-        var compromisedLevel = await ExecuteScalarQueryAsync(Table
-            .Where(r => r.PasswordSecurityLevel == PasswordSecurityLevel.Compromised
-                && r.UserLogin == userLogin)
+        var compromisedLevel = await ExecuteScalarQueryAsync(Table.Where(r =>
+                r.PasswordSecurityLevel == PasswordSecurityLevel.Compromised && r.UserLogin == userLogin)
             .Count());
 
         result[PasswordSecurityLevel.Secure] = secureLevel;
