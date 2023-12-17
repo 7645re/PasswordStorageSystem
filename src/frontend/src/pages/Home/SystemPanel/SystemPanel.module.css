@@ -1,148 +1,125 @@
 .systemPanel {
-    display: flex;
-    border-radius: 20px;
-    border: 5px solid #5555ff;
-    padding: 35px;
-    flex-direction: column;
-    max-width: 800px;
-    width: 100%;
+  display: flex;
+  border-radius: 20px;
+  border: 5px solid #5555ff;
+  padding: 35px;
+  flex-direction: column;
+  max-width: 800px;
+  width: 100%;
 }
 
 .panelHeader {
-    display: flex;
-    margin-bottom: 20px;
-    justify-content: space-between;
+  display: flex;
+  margin-bottom: 20px;
+  justify-content: space-between;
 }
 
 .panelLabel {
-    font-weight: 700;
-    font-size: 45px;
+  font-weight: 700;
+  font-size: 45px;
 }
 
 .safetyStatus {
-    color: #b4b4b4;
-    font-size: 20px;
-    font-weight: 700;
+  color: #b4b4b4;
+  font-size: 20px;
+  font-weight: 700;
 }
 
 .updateSafetyStatus {
-    border-radius: 20px;
-    background-color: #5555ff;
-    border: 4px solid #7070ff;
-    color: white;
-    margin-left: 50px;
+  border-radius: 20px;
+  background-color: #5555ff;
+  border: 4px solid #7070ff;
+  color: white;
+  margin-left: 50px;
 }
 
 .updateSafetyStatus:hover {
-    cursor: pointer;
+  cursor: pointer;
 }
 
 .updateSafetyStatus:active {
-    filter: brightness(120%);
+  filter: brightness(120%);
 }
 
 .analytics {
-    background-color: #F7F8FA;
-    justify-content: space-between;
-    padding: 30px;
-    border-radius: 20px;
-    display: flex;
-    margin-bottom: 10px;
+  background-color: #f7f8fa;
+  justify-content: space-between;
+  padding: 30px;
+  border-radius: 20px;
+  display: flex;
+  margin-bottom: 10px;
 }
 
 .passwordCounterValue {
-    font-size: 80px;
-    font-weight: 700;
+  font-size: 80px;
+  font-weight: 700;
 }
 
 .counterLabel {
-    font-size: 35px;
+  font-size: 35px;
 }
 
 .passwordIndicators {
-    margin-left: 50px;
-    display: flex;
-    flex-direction: row;
-    border-radius: 20px;
-    gap: 20px;
-    justify-content: start;
+  margin-left: 50px;
+  display: flex;
+  flex-direction: row;
+  border-radius: 20px;
+  gap: 20px;
+  justify-content: start;
 }
 
 .indicatorCircle {
-    border-radius: 50%;
-    border: 5px solid;
-    width: 100px;
-    height: 100px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-weight: 700;
-    font-size: 30px;
-    margin-bottom: 10px;
+  border-radius: 50%;
+  border: 5px solid;
+  width: 100px;
+  height: 100px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: 700;
+  font-size: 30px;
+  margin-bottom: 10px;
 }
 
 .redIndicator {
-    border-color: red;
+  border-color: red;
 }
 .yellowIndicator {
-    border-color: #F3D56A;
+  border-color: #f3d56a;
 }
 .greenIndicator {
-    border-color: green;
+  border-color: green;
 }
 
 .passwordIndicator {
-    display: flex;
-    justify-content: start;
-    align-items: center;
-    flex-direction: column;
-    font-weight: 500;
-    font-size: 20px;
-    text-align: center;
+  display: flex;
+  justify-content: start;
+  align-items: center;
+  flex-direction: column;
+  font-weight: 500;
+  font-size: 20px;
+  text-align: center;
 }
 
 .credentialsExplorer {
-    padding: 20px;
-    border-radius: 20px;
-    height: 300px;
-    display: flex;
-    flex-direction: column;
+  padding: 20px;
+  border-radius: 20px;
+  height: 300px;
+  display: flex;
+  flex-direction: column;
 }
 
 .addCredential {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    flex: 0 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex: 0 0;
 }
 
 .credentials {
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-    gap: 10px;
-    overflow: auto;
-}
-
-.credential {
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-    align-items: center;
-    padding: 10px;
-    gap: 5px;
-    border-radius: 20px;
-}
-
-.credentialInfoItem {
-    flex: 1;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.credentialEditButton {
-    background-color: transparent;
-    border: 0;
-    cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  gap: 10px;
+  overflow: auto;
 }
