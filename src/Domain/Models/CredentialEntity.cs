@@ -19,14 +19,12 @@ public class CredentialEntity
     [Column("resource_login")]
     public string ResourceLogin { get; set; } = string.Empty;
     
-    [SecondaryIndex]
     [Column("resource_password")]
     public string ResourcePassword { get; set; } = string.Empty;
 
     [Column("id")]
     public Guid Id { get; set; }
 
-    [SecondaryIndex]
     [Column("password_security_level", Type = typeof(int))]
     public PasswordSecurityLevel PasswordSecurityLevel { get; set; }
     

@@ -79,8 +79,34 @@ public static class CredentialMapper
         };
     }
 
-    public static CredentialUpdated ToCredentialUpdated(this CredentialEntity credentialEntity, DateTimeOffset changedAt)
+    public static CredentialByPasswordEntity ToCredentialByPasswordEntity(
+        this CredentialEntity credentialEntity)
     {
-        return new CredentialUpdated(credentialEntity.ResourcePassword, changedAt.ToLocalTime(), credentialEntity.PasswordSecurityLevel);
+        return new CredentialByPasswordEntity
+        {
+            ResourcePassword = credentialEntity.ResourcePassword,
+            UserLogin = credentialEntity.UserLogin,
+            ResourceName = credentialEntity.ResourceName,
+            ResourceLogin = credentialEntity.ResourceLogin
+        };
+    }
+
+    public static CredentialUpdated ToCredentialUpdated(this CredentialEntity credentialEntity,
+        DateTimeOffset changedAt)
+    {
+        return new CredentialUpdated(credentialEntity.ResourcePassword, changedAt.ToLocalTime(),
+            credentialEntity.PasswordSecurityLevel);
+    }
+
+    public static CredentialBySecurityLevelEntity ToCredentialSecurityLevelEntity(
+        this CredentialEntity credentialEntity)
+    {
+        return new CredentialBySecurityLevelEntity
+        {
+            UserLogin = credentialEntity.UserLogin,
+            PasswordSecurityLevel = (int)credentialEntity.PasswordSecurityLevel,
+            ResourceName = credentialEntity.ResourceName,
+            ResourceLogin = credentialEntity.ResourceLogin
+        };
     }
 }

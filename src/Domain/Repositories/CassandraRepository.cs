@@ -1,10 +1,37 @@
 using Cassandra;
 using Cassandra.Data.Linq;
+using Cassandra.Mapping;
+using Cassandra.Mapping.TypeConversion;
+using Domain.Enums;
 using Domain.Options;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace Domain.Repositories;
+
+public class MyTypeConverter : TypeConverter
+{
+    protected override Func<TDatabase, TPoco> GetUserDefinedFromDbConverter<TDatabase, TPoco>()
+    {
+        if (typeof(TDatabase) == typeof(Int32) && typeof(TPoco) == typeof(PasswordSecurityLevel))
+        {
+            Func<Int32, PasswordSecurityLevel> func = documentState => (PasswordSecurityLevel)documentState;
+            return (Func<TDatabase, TPoco>)(object)func;
+        }
+
+        return null;
+    }
+
+    protected override Func<TPoco, TDatabase> GetUserDefinedToDbConverter<TPoco, TDatabase>()
+    {
+        if (typeof(TDatabase) == typeof(Int32) && typeof(TPoco) == typeof(PasswordSecurityLevel))
+        {
+            return null;
+        }
+
+        return null;
+    }
+}
 
 public abstract class CassandraRepositoryBase<T> where T : class
 {
@@ -26,7 +53,10 @@ public abstract class CassandraRepositoryBase<T> where T : class
             .Connect();
         session.CreateKeyspaceIfNotExists(options.KeySpace);
         session.ChangeKeyspace(options.KeySpace);
-        Table = new Table<T>(session);
+        Table = new Table<T>(session, new MappingConfiguration()
+            .ConvertTypesUsing(new MyTypeConverter()));
+        
+        // Table = new Table<T>(session);
         Table.CreateIfNotExists();
     }
 

@@ -15,7 +15,7 @@ public class PasswordLevelCalculatorService : IPasswordLevelCalculatorService
     
     public async Task<PasswordSecurityLevel> CalculateLevelAsync(string userLogin, string password)
     {
-        var usersHaveThisPassword = await _credentialRepository.FindPasswordDuplicatesAsync(password);
+        var usersHaveThisPassword = await _credentialRepository.FindUsersWithSamePasswordAsync(password);
         if (usersHaveThisPassword.Any(l => l != userLogin)) return PasswordSecurityLevel.Compromised;
         
         var score = 0;

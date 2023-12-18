@@ -77,7 +77,7 @@ public class CredentialService : ICredentialService
             return new OperationResult { IsSuccess = false, ErrorMessage = "Credential doesnt exist" };
 
         await _credentialRepository.DeleteCredentialAsync(credentialDelete.UserLogin, credentialDelete.ResourceName,
-            credentialDelete.ResourceLogin, credentialDelete.CredentialId);
+            credentialDelete.ResourceLogin);
         return new OperationResult { IsSuccess = true };
     }
 

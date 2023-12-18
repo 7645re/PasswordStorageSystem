@@ -20,6 +20,8 @@ builder.Services.AddSingleton<IPasswordLevelCalculatorService, PasswordLevelCalc
 builder.Services.AddSingleton<IUserValidator, UserValidator>();
 builder.Services.AddSingleton<IUserRepository, UserRepository>();
 builder.Services.AddSingleton<ICredentialHistoryRepository, CredentialHistoryRepository>();
+builder.Services.AddSingleton<ICredentialBySecurityLevelRepository, CredentialBySecurityLevelRepository>();
+builder.Services.AddSingleton<ICredentialByPasswordRepository, CredentialByPasswordRepository>();
 builder.Services.AddSingleton<ICredentialRepository, CredentialRepository>();
 builder.Services.AddTransient<IUserService, UserService>();
 builder.Services.AddTransient<ICredentialService, CredentialService>();
