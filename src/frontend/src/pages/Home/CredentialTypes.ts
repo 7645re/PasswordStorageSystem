@@ -1,3 +1,5 @@
+import { UUID } from "crypto";
+
 export enum PasswordSecurityLevel {
   Secure,
   Insecure,
@@ -11,6 +13,7 @@ export interface Credential {
   createAt: string;
   changeAt: string;
   passwordSecurityLevel: PasswordSecurityLevel;
+  id: UUID;
 }
 
 export interface PasswordSecurityLevels {

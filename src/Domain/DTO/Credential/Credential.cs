@@ -1,6 +1,6 @@
 using Domain.Enums;
 
-namespace Domain.DTO;
+namespace Domain.DTO.Credential;
 
 public class Credential
 {

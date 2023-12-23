@@ -10,7 +10,7 @@ import {
   PasswordSecurityLevels,
 } from "../CredentialTypes";
 import { CredentialComponent } from "../Credential/CredentialComponent";
-import { OperationResult } from "../../OperationResult";
+import { AxiosError, HttpStatusCode } from "axios";
 
 interface FormData {
   ResourceName: string;
@@ -38,12 +38,12 @@ export default function SystemPanel() {
   async function fetchCredentialsCount() {
     try {
       // TODO: move the request configuration to a different location so that it doesn't have to be created each time
-      var response = await instance.get<OperationResult<number>>(
+      var response = await instance.get<number>(
         ENDPOINTS.CREDENTIALS_COUNT,
         createAuthConfig(token)
       );
-      if (response.data.isSuccess) {
-        setCredentialsCount(response.data.result);
+      if (response.status === HttpStatusCode.Ok) {
+        setCredentialsCount(response.data);
       }
     } catch (e) {
       console.log(e);
@@ -52,11 +52,12 @@ export default function SystemPanel() {
 
   async function fetchPasswordSecurityLevels() {
     try {
-      var response = await instance.get<
-        OperationResult<PasswordSecurityLevels>
-      >(ENDPOINTS.PASSWORDS_SECURITY_LEVELS, createAuthConfig(token));
-      if (response.data.isSuccess) {
-        setPasswordSecurityLevels(response.data.result);
+      var response = await instance.get<PasswordSecurityLevels>(
+        ENDPOINTS.PASSWORDS_SECURITY_LEVELS,
+        createAuthConfig(token)
+      );
+      if (response.status === HttpStatusCode.Ok) {
+        setPasswordSecurityLevels(response.data);
       }
     } catch (e) {
       console.log(e);
@@ -65,12 +66,12 @@ export default function SystemPanel() {
 
   async function fetchCredentials() {
     try {
-      var response = await instance.get<OperationResult<Credential[]>>(
+      var response = await instance.get<Credential[]>(
         ENDPOINTS.CREDENTIALS,
         createAuthConfig(token)
       );
-      if (response.data.isSuccess) {
-        setCredentials(response.data.result);
+      if (response.status === HttpStatusCode.Ok) {
+        setCredentials(response.data);
       }
     } catch (e) {
       console.log(e);
@@ -80,6 +81,7 @@ export default function SystemPanel() {
   const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     e.preventDefault();
     const { name, value } = e.target;
+    console.log(e.target);
     setFormData({ ...formData, [name]: value });
   };
 
@@ -87,41 +89,35 @@ export default function SystemPanel() {
     e.preventDefault();
 
     try {
-      let response = await instance.post<OperationResult<Credential>>(
+      let response = await instance.post<Credential>(
         ENDPOINTS.CREDENTIALS,
         formData,
         createAuthConfig(token)
       );
-      if (response.data.isSuccess) {
-        setCredentials((prevCred) =>
-          [...prevCred, response.data.result].sort((a, b) =>
-            a.resourceName.localeCompare(b.resourceName)
-          )
-        );
+      setCredentials((prevCred) => [...prevCred, response.data]);
 
-        setCredentialsCount((prevCred) => prevCred + 1);
-        switch (response.data.result.passwordSecurityLevel) {
-          case PasswordSecurityLevel.Secure:
-            setPasswordSecurityLevels((prevLevels) => ({
-              ...prevLevels,
-              Secure: prevLevels.Secure + 1,
-            }));
-            break;
-          case PasswordSecurityLevel.Insecure:
-            setPasswordSecurityLevels((prevLevels) => ({
-              ...prevLevels,
-              Insecure: prevLevels.Insecure + 1,
-            }));
-            break;
-          case PasswordSecurityLevel.Compromised:
-            setPasswordSecurityLevels((prevLevels) => ({
-              ...prevLevels,
-              Compromised: prevLevels.Compromised + 1,
-            }));
-            break;
-          default:
-            break;
-        }
+      setCredentialsCount((prevCred) => prevCred + 1);
+      switch (response.data.passwordSecurityLevel) {
+        case PasswordSecurityLevel.Secure:
+          setPasswordSecurityLevels((prevLevels) => ({
+            ...prevLevels,
+            Secure: prevLevels.Secure + 1,
+          }));
+          break;
+        case PasswordSecurityLevel.Insecure:
+          setPasswordSecurityLevels((prevLevels) => ({
+            ...prevLevels,
+            Insecure: prevLevels.Insecure + 1,
+          }));
+          break;
+        case PasswordSecurityLevel.Compromised:
+          setPasswordSecurityLevels((prevLevels) => ({
+            ...prevLevels,
+            Compromised: prevLevels.Compromised + 1,
+          }));
+          break;
+        default:
+          break;
       }
       setFormData({
         ResourceName: "",
@@ -227,8 +223,8 @@ export default function SystemPanel() {
         </form>
         <div className={styles.credentials}>
           {credentials.length > 0
-            ? credentials.map((cred, index) => (
-                <CredentialComponent key={index} credential={cred} />
+            ? credentials.map((cred) => (
+                <CredentialComponent key={cred.createAt} credential={cred} />
               ))
             : ""}
         </div>

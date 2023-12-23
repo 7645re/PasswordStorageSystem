@@ -1,4 +1,5 @@
 using Domain.DTO;
+using Domain.DTO.User;
 using Domain.Models;
 
 namespace Domain.Mappers;

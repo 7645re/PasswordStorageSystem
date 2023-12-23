@@ -1,14 +1,7 @@
 using Domain.Options;
-using Domain.Repositories.CredentialByPasswordRepository;
-using Domain.Repositories.CredentialBySecurityLevelRepository;
-using Domain.Repositories.CredentialHistoryRepository;
-using Domain.Repositories.CredentialRepository;
 using Domain.Repositories.UserRepository;
-using Domain.Services.CredentialService;
-using Domain.Services.PasswordLevelCalculatorService;
 using Domain.Services.TokenService;
 using Domain.Services.UserService;
-using Domain.Validators.CredentialValidator;
 using Domain.Validators.UserValidator;
 using WebAPI.Extensions;
 
@@ -18,16 +11,9 @@ builder.Services.Configure<CassandraOptions>(builder.Configuration.GetRequiredSe
 builder.Services.Configure<JwtOptions>(builder.Configuration.GetRequiredSection("Jwt"));
 
 builder.Logging.AddConsole();
-builder.Services.AddSingleton<ICredentialValidator, CredentialValidator>();
-builder.Services.AddSingleton<IPasswordLevelCalculatorService, PasswordLevelCalculatorService>();
 builder.Services.AddSingleton<IUserValidator, UserValidator>();
 builder.Services.AddSingleton<IUserRepository, UserRepository>();
-builder.Services.AddSingleton<ICredentialHistoryRepository, CredentialHistoryRepository>();
-builder.Services.AddSingleton<ICredentialBySecurityLevelRepository, CredentialBySecurityLevelRepository>();
-builder.Services.AddSingleton<ICredentialByPasswordRepository, CredentialByPasswordRepository>();
-builder.Services.AddSingleton<ICredentialRepository, CredentialRepository>();
 builder.Services.AddTransient<IUserService, UserService>();
-builder.Services.AddTransient<ICredentialService, CredentialService>();
 builder.Services.AddSingleton<ITokenService, TokenService>();
 
 builder.Services.AddControllers();

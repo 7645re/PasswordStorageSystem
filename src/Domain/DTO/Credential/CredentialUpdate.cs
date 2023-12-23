@@ -1,4 +1,4 @@
-namespace Domain.DTO;
+namespace Domain.DTO.Credential;
 
 public record CredentialUpdate(
     string UserLogin,

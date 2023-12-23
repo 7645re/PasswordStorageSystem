@@ -1,15 +1,7 @@
 import { useState } from "react";
 import styles from "./Credential.module.css";
-import {
-  Credential,
-  CredentialUpdate,
-  PasswordSecurityLevel,
-} from "../CredentialTypes";
+import { Credential, PasswordSecurityLevel } from "../CredentialTypes";
 import { useOutsideClick } from "../../../hooks/useOutsideClick";
-import instance from "../../../app/requestInterceptor";
-import { OperationResult } from "../../OperationResult";
-import { ENDPOINTS } from "../../../endpoints";
-import { createAuthConfig } from "../../../utils/authConfigCreator";
 
 import { ReactComponent as EditIcon } from "../../../assets/editIcon.svg";
 import { ReactComponent as AcceptIcon } from "../../../assets/acceptIcon.svg";
@@ -25,6 +17,11 @@ export function CredentialComponent(props: Props) {
     props.credential.resourcePassword
   );
 
+  console.log(
+    props.credential.resourcePassword,
+    changedPassword,
+    props.credential.resourcePassword === changedPassword
+  );
   const ref = useOutsideClick(() => {
     if (isEditing) {
       setEditingState((prevState) => !prevState);
@@ -35,22 +32,6 @@ export function CredentialComponent(props: Props) {
     setChangedPassword(props.credential.resourcePassword);
     setEditingState((prevState) => !prevState);
   };
-
-  // async function patchCredentialPassword() {
-  //   try {
-  //     var response = await instance.get<OperationResult<CredentialUpdate>>(
-  //       ENDPOINTS.CREDENTIALS,
-  //       createAuthConfig(token)
-  //     );
-  //     if (response.data.isSuccess) {
-  //       setCredentials(response.data.result);
-  //     }
-  //   } catch (e) {
-  //     console.log(e);
-  //   }
-  // }
-
-  // const handleChangeCredentialPassword = () => {};
 
   return (
     <div ref={ref} className={styles.credential}>
@@ -94,6 +75,16 @@ export function CredentialComponent(props: Props) {
         }}
       >
         <AcceptIcon width={30} height={30} />
+      </button>
+      <button
+        className={styles.credentialButton}
+        style={{
+          display:
+            props.credential.resourcePassword !== changedPassword
+              ? "block"
+              : "none",
+        }}
+      >
         <CancelIcon onClick={handleCancelEdit} width={30} height={30} />
       </button>
     </div>

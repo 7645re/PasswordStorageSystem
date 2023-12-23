@@ -1,4 +1,5 @@
 using Domain.DTO;
+using Domain.DTO.User;
 using Domain.Mappers;
 using Domain.Repositories.UserRepository;
 using Domain.Services.TokenService;
@@ -53,10 +54,10 @@ public class UserService : IUserService
         return accessTokenInfo;
     }
 
-    public async Task ChangePasswordAsync(UserChangePassword userChangePassword)
+    public async Task ChangePasswordAsync(UserUpdate userUpdate)
     {
-        _userValidator.ValidatePassword(userChangePassword.NewPassword);
+        _userValidator.ValidatePassword(userUpdate.NewPassword);
 
-        await _userRepository.ChangePasswordAsync(userChangePassword.Login, userChangePassword.NewPassword);
+        await _userRepository.ChangePasswordAsync(userUpdate.Login, userUpdate.NewPassword);
     }
 }

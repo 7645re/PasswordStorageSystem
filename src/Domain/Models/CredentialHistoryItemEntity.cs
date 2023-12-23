@@ -10,10 +10,10 @@ public class CredentialHistoryItemEntity
     [Column("credential_id")]
     public Guid CredentialId { get; set; }
 
-    [Column("resource_password")]
-    public string ResourcePassword { get; set; } = string.Empty;
-    
     [ClusteringKey(0, SortOrder.Descending)]
     [Column("changed_at")]
     public DateTimeOffset ChangedAt { get; set; }
+    
+    [Column("resource_password")]
+    public string ResourcePassword { get; set; } = string.Empty;
 }

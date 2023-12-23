@@ -4,19 +4,12 @@ using Domain.Repositories.CredentialRepository;
 
 namespace Domain.Services.PasswordLevelCalculatorService;
 
-public class PasswordLevelCalculatorService : IPasswordLevelCalculatorService
+public class PasswordLevelCalculatorService
 {
-    private readonly ICredentialRepository _credentialRepository;
-    
-    public PasswordLevelCalculatorService(ICredentialRepository credentialRepository)
-    {
-        _credentialRepository = credentialRepository;
-    }
-    
     public async Task<PasswordSecurityLevel> CalculateLevelAsync(string userLogin, string password)
     {
-        var usersHaveThisPassword = await _credentialRepository.FindUsersWithSamePasswordAsync(password);
-        if (usersHaveThisPassword.Any(l => l != userLogin)) return PasswordSecurityLevel.Compromised;
+        // var usersHaveThisPassword = await _credentialByResourceRepository.FindUsersWithSamePasswordAsync(password);
+        // if (usersHaveThisPassword.Any(l => l != userLogin)) return PasswordSecurityLevel.Compromised;
         
         var score = 0;
 

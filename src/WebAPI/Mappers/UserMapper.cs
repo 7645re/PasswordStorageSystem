@@ -1,4 +1,5 @@
 using Domain.DTO;
+using Domain.DTO.User;
 using WebAPI.DTO.Request;
 
 namespace WebAPI.Mappers;
@@ -10,9 +11,9 @@ public static class UserMapper
         return new UserCreate(userRegisterRequest.Login, userRegisterRequest.Password);
     }
 
-    public static UserChangePassword ToUserChangePassword(this UserChangePasswordRequest userChangePasswordRequest)
+    public static UserUpdate ToUserChangePassword(this UserChangePasswordRequest userChangePasswordRequest)
     {
-        return new UserChangePassword(userChangePasswordRequest.Login, userChangePasswordRequest.NewPassword);
+        return new UserUpdate(userChangePasswordRequest.Login, userChangePasswordRequest.NewPassword);
     }
     
     public static UserLogIn ToUserLogIn(this UserLogInRequest userLogInRequest)
