@@ -1,4 +1,4 @@
-using Domain.Services;
+using Domain.Services.UserService;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WebAPI.DTO.Request;
@@ -37,10 +37,7 @@ public class UserController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetUserAsync()
     {
-        var userLogin = User.Identity?.Name;
-        if (userLogin == null) return BadRequest("Server error token doesnt have user login");
-
-        var result = await _userService.GetUserAsync(userLogin);
+        var result = await _userService.GetUserAsync(User.Identity.Name);
         return Ok(result);
     }
 
@@ -48,11 +45,8 @@ public class UserController : ControllerBase
     [HttpDelete]
     public async Task<IActionResult> DeleteUserAsync()
     {
-        var userLogin = User.Identity?.Name;
-        if (userLogin == null) return BadRequest("Server error token doesnt have user login");
-
-        var result = await _userService.DeleteUserAsync(userLogin);
-        return Ok(result);
+        await _userService.DeleteUserAsync(User.Identity.Name);
+        return Ok();
     }
 
     [Authorize]
@@ -60,10 +54,7 @@ public class UserController : ControllerBase
     public async Task<IActionResult> ChangeUserPasswordAsync(
         [FromBody] UserChangePasswordRequest userChangePasswordRequest)
     {
-        var userLogin = User.Identity?.Name;
-        if (userLogin == null) return BadRequest("Server error token doesnt have user login");
-
-        var result = await _userService.ChangePasswordAsync(userChangePasswordRequest.ToUserChangePassword());
-        return Ok(result);
+        await _userService.ChangePasswordAsync(userChangePasswordRequest.ToUserChangePassword());
+        return Ok();
     }
 }

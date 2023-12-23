@@ -1,20 +1,23 @@
-using System.Text;
 using Domain.Options;
-using Domain.Repositories;
-using Domain.Services;
-using Domain.Validators;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
-using Microsoft.OpenApi.Models;
+using Domain.Repositories.CredentialByPasswordRepository;
+using Domain.Repositories.CredentialBySecurityLevelRepository;
+using Domain.Repositories.CredentialHistoryRepository;
+using Domain.Repositories.CredentialRepository;
+using Domain.Repositories.UserRepository;
+using Domain.Services.CredentialService;
+using Domain.Services.PasswordLevelCalculatorService;
+using Domain.Services.TokenService;
+using Domain.Services.UserService;
+using Domain.Validators.CredentialValidator;
+using Domain.Validators.UserValidator;
+using WebAPI.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.Configure<CassandraOptions>(builder.Configuration.GetRequiredSection("Cassandra"));
 builder.Services.Configure<JwtOptions>(builder.Configuration.GetRequiredSection("Jwt"));
 
-
 builder.Logging.AddConsole();
-builder.Services.AddMemoryCache();
 builder.Services.AddSingleton<ICredentialValidator, CredentialValidator>();
 builder.Services.AddSingleton<IPasswordLevelCalculatorService, PasswordLevelCalculatorService>();
 builder.Services.AddSingleton<IUserValidator, UserValidator>();
@@ -29,50 +32,9 @@ builder.Services.AddSingleton<ITokenService, TokenService>();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(c =>
-{
-    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-    {
-        In = ParameterLocation.Header,
-        Description = "Please insert JWT with Bearer into field",
-        Name = "Authorization",
-        Type = SecuritySchemeType.ApiKey
-    });
-    c.AddSecurityRequirement(new OpenApiSecurityRequirement
-    {
-        {
-            new OpenApiSecurityScheme
-            {
-                Reference = new OpenApiReference
-                {
-                    Type = ReferenceType.SecurityScheme,
-                    Id = "Bearer"
-                }
-            },
-            new string[] { }
-        }
-    });
-});
-
-
-var key = Encoding.ASCII.GetBytes(builder.Configuration["Jwt:Key"]);
-builder.Services.AddAuthentication(options =>
-{
-    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-}).AddJwtBearer(options =>
-{
-    options.TokenValidationParameters = new TokenValidationParameters
-    {
-        ValidateIssuer = true,
-        ValidateAudience = true,
-        ValidateLifetime = true,
-        ValidateIssuerSigningKey = true,
-        ValidIssuer = builder.Configuration["Jwt:Issuer"],
-        ValidAudience = builder.Configuration["Jwt:Audience"],
-        IssuerSigningKey = new SymmetricSecurityKey(key)
-    };
-});
+builder.Services.AddControllersWithErrorBehavior();
+builder.Services.AddSwagger();
+builder.Services.AddJwt(builder.Configuration);
 
 builder.Services.AddCors(options =>
 {

@@ -11,7 +11,7 @@ public static class CredentialMapper
         return new CredentialDelete(userLogin, credentialDeleteRequest.ResourceName,
             credentialDeleteRequest.ResourceLogin);
     }
-    
+
     public static CredentialCreate ToCredentialCreate(this CredentialCreateRequest credentialCreateRequest,
         string userLogin)
     {
@@ -20,7 +20,7 @@ public static class CredentialMapper
             credentialCreateRequest.ResourceLogin,
             credentialCreateRequest.ResourcePassword);
     }
-    
+
     public static CredentialUpdate ToCredentialUpdate(this CredentialUpdateRequest credentialUpdateRequest,
         string userLogin)
     {

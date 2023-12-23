@@ -1,14 +1,14 @@
 using Cassandra.Data.Linq;
-using Domain.Enums;
 using Domain.Mappers;
 using Domain.Models;
 using Domain.Options;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-namespace Domain.Repositories;
+namespace Domain.Repositories.CredentialBySecurityLevelRepository;
 
-public class CredentialBySecurityLevelRepository : CassandraRepositoryBase<CredentialBySecurityLevelEntity>, ICredentialBySecurityLevelRepository
+public class CredentialBySecurityLevelRepository : CassandraRepositoryBase<CredentialBySecurityLevelEntity>,
+    ICredentialBySecurityLevelRepository
 {
     public CredentialBySecurityLevelRepository(IOptions<CassandraOptions> cassandraOptions,
         ILogger<CassandraRepositoryBase<CredentialBySecurityLevelEntity>> logger) : base(cassandraOptions, logger)

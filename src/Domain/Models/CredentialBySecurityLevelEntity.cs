@@ -1,13 +1,12 @@
 using Cassandra.Mapping;
 using Cassandra.Mapping.Attributes;
-using Domain.Enums;
 
 namespace Domain.Models;
 
 [Table("credentials_by_security_level", Keyspace = "password_storage_system")]
 public class CredentialBySecurityLevelEntity
 {
-    [PartitionKey(0)]
+    [PartitionKey]
     [Column("password_security_level")]
     public int PasswordSecurityLevel { get; set; }
     

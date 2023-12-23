@@ -1,8 +1,7 @@
 using Cassandra.Data.Linq;
-using Domain.Enums;
 using Domain.Models;
 
-namespace Domain.Repositories;
+namespace Domain.Repositories.CredentialBySecurityLevelRepository;
 
 public interface ICredentialBySecurityLevelRepository
 {

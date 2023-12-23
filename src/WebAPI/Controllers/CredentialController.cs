@@ -1,4 +1,4 @@
-using Domain.Services;
+using Domain.Services.CredentialService;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WebAPI.DTO.Request;
@@ -21,28 +21,21 @@ public class CredentialController : ControllerBase
     [HttpGet("count")]
     public async Task<IActionResult> GetCredentialsCountAsync()
     {
-        // TODO: Unify part with get user login and return bad request
-        var userLogin = User.Identity?.Name;
-        if (userLogin == null) return BadRequest("Server error token doesnt have user login");
-        var result = await _credentialService.GetCredentialsCountAsync(userLogin);
+        var result = await _credentialService.GetCredentialsCountAsync(User.Identity.Name);
         return Ok(result);
     }
-    
+
     [HttpGet("passwords-security-levels")]
     public async Task<IActionResult> GetPasswordsLevelsInfoAsync()
     {
-        var userLogin = User.Identity?.Name;
-        if (userLogin == null) return BadRequest("Server error token doesnt have user login");
-        var result = await _credentialService.GetPasswordsLevelsInfoAsync(userLogin);
+        var result = await _credentialService.GetPasswordsLevelsInfoAsync(User.Identity.Name);
         return Ok(result);
-    }    
-    
+    }
+
     [HttpGet]
     public async Task<IActionResult> GetCredentialsAsync()
     {
-        var userLogin = User.Identity?.Name;
-        if (userLogin == null) return BadRequest("Server error token doesnt have user login");
-        var result = await _credentialService.GetCredentialsAsync(userLogin);
+        var result = await _credentialService.GetCredentialsAsync(User.Identity.Name);
         return Ok(result);
     }
 
@@ -56,36 +49,33 @@ public class CredentialController : ControllerBase
     [HttpDelete]
     public async Task<IActionResult> DeleteCredentialAsync([FromBody] CredentialDeleteRequest credentialDeleteRequest)
     {
-        var userLogin = User.Identity?.Name;
-        if (userLogin == null) return BadRequest("Server error token doesnt have user login");
-        var result = await _credentialService.DeleteCredentialAsync(credentialDeleteRequest.ToCredentialDelete(userLogin));
-        return Ok(result);
+        await _credentialService.DeleteCredentialAsync(
+                credentialDeleteRequest.ToCredentialDelete(User.Identity.Name));
+        return Ok();
     }
 
     [HttpPost]
     public async Task<IActionResult> CreateCredentialAsync([FromBody] CredentialCreateRequest credentialCreateRequest)
     {
-        var userLogin = User.Identity?.Name;
-        if (userLogin == null) return BadRequest("Server error token doesnt have user login");
-        var result = await _credentialService.CreateCredentialAsync(credentialCreateRequest.ToCredentialCreate(userLogin));
+        var result =
+            await _credentialService.CreateCredentialAsync(
+                credentialCreateRequest.ToCredentialCreate(User.Identity.Name));
         return Ok(result);
     }
 
     [HttpPost("generate")]
     public async Task<IActionResult> GenerateCredentialAsync([FromQuery] int count)
     {
-        var userLogin = User.Identity?.Name;
-        if (userLogin == null) return BadRequest("Server error token doesnt have user login");
-        var result = await _credentialService.GenerateCredentialsAsync(userLogin, count);
+        var result = await _credentialService.GenerateCredentialsAsync(User.Identity.Name, count);
         return Ok(result);
     }
 
     [HttpPatch]
     public async Task<IActionResult> UpdateCredentialAsync([FromBody] CredentialUpdateRequest credentialUpdateRequest)
     {
-        var userLogin = User.Identity?.Name;
-        if (userLogin == null) return BadRequest("Server error token doesnt have user login");
-        var result = await _credentialService.UpdateCredentialAsync(credentialUpdateRequest.ToCredentialUpdate(userLogin));
+        var result =
+            await _credentialService.UpdateCredentialAsync(
+                credentialUpdateRequest.ToCredentialUpdate(User.Identity.Name));
         return Ok(result);
     }
 }

@@ -1,8 +1,5 @@
 using Cassandra;
 using Cassandra.Data.Linq;
-using Cassandra.Mapping;
-using Cassandra.Mapping.TypeConversion;
-using Domain.Enums;
 using Domain.Options;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -77,10 +74,13 @@ public abstract class CassandraRepositoryBase<T> where T : class
     protected async Task ExecuteAsBatchAsync(IReadOnlyCollection<CqlCommand> commands)
     {
         // The library does not allow you to get a query trace from a executed batch
+        foreach (var cqlCommand in commands)
+            cqlCommand.EnableTracing();
         var batch = Table
             .GetSession()
             .CreateBatch()
             .Append(commands);
+        batch.EnableTracing();
         await batch.ExecuteAsync();
 
         _logger.LogInformation(batch.ToString());

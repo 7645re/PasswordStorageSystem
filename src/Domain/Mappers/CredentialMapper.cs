@@ -1,6 +1,7 @@
 using Domain.DTO;
 using Domain.Enums;
 using Domain.Models;
+using Domain.Validators.CredentialValidator;
 
 namespace Domain.Mappers;
 
@@ -108,5 +109,19 @@ public static class CredentialMapper
             ResourceName = credentialEntity.ResourceName,
             ResourceLogin = credentialEntity.ResourceLogin
         };
+    }
+
+    public static CredentialValidate ToCredentialValidate(this CredentialUpdate credentialUpdate)
+    {
+        return new CredentialValidate(credentialUpdate.ResourceName,
+            credentialUpdate.ResourceLogin,
+            credentialUpdate.NewResourcePassword);
+    }
+    
+    public static CredentialValidate ToCredentialValidate(this CredentialCreate credentialCreate)
+    {
+        return new CredentialValidate(credentialCreate.ResourceName,
+            credentialCreate.ResourceLogin,
+            credentialCreate.ResourcePassword);
     }
 }

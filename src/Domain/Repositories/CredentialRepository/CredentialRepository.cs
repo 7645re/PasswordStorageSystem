@@ -1,12 +1,14 @@
-using System.Data;
 using Cassandra.Data.Linq;
 using Domain.Enums;
 using Domain.Models;
 using Domain.Options;
+using Domain.Repositories.CredentialByPasswordRepository;
+using Domain.Repositories.CredentialBySecurityLevelRepository;
+using Domain.Repositories.CredentialHistoryRepository;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-namespace Domain.Repositories;
+namespace Domain.Repositories.CredentialRepository;
 
 public class CredentialRepository : CassandraRepositoryBase<CredentialEntity>, ICredentialRepository
 {
@@ -29,30 +31,46 @@ public class CredentialRepository : CassandraRepositoryBase<CredentialEntity>, I
         return await ExecuteQueryAsync(Table.Where(r => r.UserLogin == userLogin));
     }
 
-    public async Task<CredentialEntity?> GetCredentialAsync(string userLogin, string resourceName, string resourceLogin)
+    public async Task<CredentialEntity> GetCredentialAsync(string userLogin, string resourceName, string resourceLogin)
     {
-        var result = await ExecuteQueryAsync(Table.Where(r =>
-            r.UserLogin == userLogin && r.ResourceName == resourceName && r.ResourceLogin == resourceLogin));
-        result = result.ToArray();
-        if (!result.Any()) return null;
-        if (result.Count() > 1) throw new DataException("Scheme error");
-        return result.Single();
+        var credential = await TryGetCredentialAsync(userLogin, resourceName, resourceLogin);
+        if (credential == null)
+            throw new Exception($"Credential with (user_login, resource_name, resource_login) doesnt exist");
+        return credential;
+    }
+
+    public async Task<CredentialEntity?> TryGetCredentialAsync(string userLogin, string resourceName,
+        string resourceLogin)
+    {
+        var credentials = (await ExecuteQueryAsync(Table.Where(r =>
+            r.UserLogin == userLogin
+            && r.ResourceName == resourceName
+            && r.ResourceLogin == resourceLogin))).ToArray();
+        if (credentials.Length > 1)
+            throw new Exception("Key (user_login, resource_name, resource_login) in Credentials doesnt unique");
+        return credentials.FirstOrDefault();
     }
 
     public async Task CreateCredentialAsync(CredentialEntity credentialEntity)
     {
+        var existedCredential = await TryGetCredentialAsync(credentialEntity.UserLogin, credentialEntity.ResourceName,
+            credentialEntity.ResourceLogin);
+        if (existedCredential != null)
+            throw new Exception(
+                $"Credential with key ({credentialEntity.UserLogin} {credentialEntity.ResourceName}" +
+                $" {credentialEntity.ResourceLogin}) already exist");
         var createCredentialByPasswordQuery =
             _credentialByPasswordRepository.CreateCredentialByPasswordQuery(credentialEntity);
         var createCredentialBySecurityLevelQuery =
             _credentialBySecurityLevelRepository.CreateCredentialBySecurityLevelQuery(credentialEntity);
+        var createCredential = AddQuery(credentialEntity);
         var batch = new[]
         {
+            createCredential,
             createCredentialByPasswordQuery,
             createCredentialBySecurityLevelQuery
         };
         await ExecuteAsBatchAsync(batch);
-        // TODO: reside create credentialEntity to batch
-        await AddAsync(credentialEntity);
     }
 
     public async Task DeleteCredentialAsync(
@@ -60,11 +78,7 @@ public class CredentialRepository : CassandraRepositoryBase<CredentialEntity>, I
         string resourceName,
         string resourceLogin)
     {
-        var credentialToDelete = (await ExecuteQueryAsync(Table.Where(r =>
-                r.UserLogin == userLogin
-                && r.ResourceName == resourceName
-                && r.ResourceLogin == resourceLogin)))
-            .Single() ?? throw new DataException("Scheme error");
+        var credentialToDelete = await GetCredentialAsync(userLogin, resourceName, resourceLogin);
         var deleteUserQuery = Table.Where(r =>
                 r.UserLogin == userLogin
                 && r.ResourceName == resourceName
@@ -95,33 +109,39 @@ public class CredentialRepository : CassandraRepositoryBase<CredentialEntity>, I
 
     public async Task UpdateCredentialAsync(CredentialEntity newCredentialEntity)
     {
-        var oldCredential = (await ExecuteQueryAsync(Table.Where(r =>
-                                r.UserLogin == newCredentialEntity.UserLogin
-                                && r.ResourceName == newCredentialEntity.ResourceName
-                                && r.ResourceLogin == newCredentialEntity.ResourceLogin))).Single()
-                            ?? throw new DataException("Scheme error");
-
-        var updateCredentialQuery = Table
-            .Where(r => r.UserLogin == newCredentialEntity.UserLogin &&
-                        r.ResourceName == newCredentialEntity.ResourceName &&
-                        r.ResourceLogin == newCredentialEntity.ResourceLogin)
-            .Select(r => new CredentialEntity
-            {
-                ResourcePassword = newCredentialEntity.ResourcePassword,
-                ChangedAt = newCredentialEntity.ChangedAt,
-                PasswordSecurityLevel = newCredentialEntity.PasswordSecurityLevel
-            })
-            .Update();
-        var createCredentialHistoryItemQuery = _credentialHistoryRepository
-            .CreateHistoryItemQuery(oldCredential);
-
-        var batchQueries = new[]
+        var oldCredentialEntity = await GetCredentialAsync(newCredentialEntity.UserLogin, newCredentialEntity.ResourceName,
+            newCredentialEntity.ResourceLogin);
+        if (oldCredentialEntity.ResourcePassword == newCredentialEntity.ResourcePassword)
+            throw new Exception("Credential state hasn't changed in any way, so it can't be updated");
+        
+        var batch = new List<CqlCommand>
         {
-            updateCredentialQuery,
-            createCredentialHistoryItemQuery
+            Table
+                .Where(r => r.UserLogin == newCredentialEntity.UserLogin &&
+                            r.ResourceName == newCredentialEntity.ResourceName &&
+                            r.ResourceLogin == newCredentialEntity.ResourceLogin)
+                .Select(r => new CredentialEntity
+                {
+                    ResourcePassword = newCredentialEntity.ResourcePassword,
+                    ChangedAt = newCredentialEntity.ChangedAt,
+                    PasswordSecurityLevel = newCredentialEntity.PasswordSecurityLevel
+                })
+                .Update(),
+            _credentialHistoryRepository
+                .CreateHistoryItemQuery(oldCredentialEntity),
+            _credentialByPasswordRepository
+                .DeleteCredentialByPasswordQuery(oldCredentialEntity),
+            _credentialByPasswordRepository
+                .CreateCredentialByPasswordQuery(newCredentialEntity)
         };
+        if (oldCredentialEntity.PasswordSecurityLevel != newCredentialEntity.PasswordSecurityLevel)
+            batch.AddRange(new []
+            {
+                _credentialBySecurityLevelRepository.DeleteCredentialBySecurityLevelQuery(oldCredentialEntity),
+                _credentialBySecurityLevelRepository.CreateCredentialBySecurityLevelQuery(newCredentialEntity)
+            });
 
-        await ExecuteAsBatchAsync(batchQueries);
+        await ExecuteAsBatchAsync(batch);
     }
 
     public async Task<long> GetCountAsync(string userLogin)
@@ -149,3 +169,6 @@ public class CredentialRepository : CassandraRepositoryBase<CredentialEntity>, I
         return result;
     }
 }
+
+public record CredentialForCompareByFields(string UserLogin, string ResourceName, string ResourceLogin,
+    string ResourcePassword);

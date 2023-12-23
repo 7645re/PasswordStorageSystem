@@ -7,7 +7,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 
-namespace Domain.Services;
+namespace Domain.Services.TokenService;
 
 public class TokenService : ITokenService
 {

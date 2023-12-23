@@ -5,7 +5,7 @@ using Domain.Options;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-namespace Domain.Repositories;
+namespace Domain.Repositories.CredentialByPasswordRepository;
 
 public class CredentialByPasswordRepository : CassandraRepositoryBase<CredentialByPasswordEntity>,
     ICredentialByPasswordRepository

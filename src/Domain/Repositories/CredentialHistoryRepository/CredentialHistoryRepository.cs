@@ -5,7 +5,7 @@ using Domain.Options;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-namespace Domain.Repositories;
+namespace Domain.Repositories.CredentialHistoryRepository;
 
 public class CredentialHistoryRepository : CassandraRepositoryBase<CredentialHistoryItemEntity>,
     ICredentialHistoryRepository

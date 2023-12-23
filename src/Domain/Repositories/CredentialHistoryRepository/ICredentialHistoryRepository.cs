@@ -1,7 +1,7 @@
 using Cassandra.Data.Linq;
 using Domain.Models;
 
-namespace Domain.Repositories;
+namespace Domain.Repositories.CredentialHistoryRepository;
 
 public interface ICredentialHistoryRepository
 {

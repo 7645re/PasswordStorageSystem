@@ -1,8 +1,8 @@
 using System.Text.RegularExpressions;
 using Domain.Enums;
-using Domain.Repositories;
+using Domain.Repositories.CredentialRepository;
 
-namespace Domain.Services;
+namespace Domain.Services.PasswordLevelCalculatorService;
 
 public class PasswordLevelCalculatorService : IPasswordLevelCalculatorService
 {

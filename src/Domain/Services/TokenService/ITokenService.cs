@@ -1,6 +1,6 @@
 using Domain.DTO;
 
-namespace Domain.Services;
+namespace Domain.Services.TokenService;
 
 public interface ITokenService
 {

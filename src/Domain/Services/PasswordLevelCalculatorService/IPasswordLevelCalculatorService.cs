@@ -1,6 +1,6 @@
 using Domain.Enums;
 
-namespace Domain.Services;
+namespace Domain.Services.PasswordLevelCalculatorService;
 
 public interface IPasswordLevelCalculatorService
 {
