@@ -17,13 +17,6 @@ public class UserRepository : CassandraRepositoryBase<UserEntity>, IUserReposito
     {
     }
 
-    public async Task<UserEntity> GetUserAsync(string login)
-    {
-        var user = await TryGetUserAsync(login);
-        if (user == null) throw new Exception($"User with login {login} doesnt exist");
-        return user;
-    }
-
     public async Task<UserEntity?> TryGetUserAsync(string login)
     {
         var users = (await ExecuteQueryAsync(Table.Where(r => r.Login == login))).ToArray();
@@ -31,6 +24,13 @@ public class UserRepository : CassandraRepositoryBase<UserEntity>, IUserReposito
         return users.FirstOrDefault();
     }
 
+    public async Task<UserEntity> GetUserAsync(string login)
+    {
+        var user = await TryGetUserAsync(login);
+        if (user == null) throw new Exception($"User with login {login} doesnt exist");
+        return user;
+    }
+    
     public async Task CheckExistAsync(string login)
     {
         await GetUserAsync(login);

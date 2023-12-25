@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Text;
 using Cassandra;
 using Cassandra.Data.Linq;
 using Domain.Models;
@@ -14,16 +15,7 @@ public class UserRepositoryTests
     private IUserRepository _userRepository;
     private Mock<Table<UserEntity>> _table;
     private Mock<ISession> _session;
-
-    public RowSet CreateMockRowSet(params Row[] rows)
-    {
-        var mockList = new List<Row>();
-        mockList.AddRange(rows);
-        var rowSet = new Mock<RowSet>();
-        rowSet.Setup(m => m.GetEnumerator()).Returns(mockList.GetEnumerator());
-        rowSet.Setup(rs => rs.Info).Returns(new ExecutionInfo());
-        return rowSet.Object;
-    }
+    private readonly ILogger<UserRepository> _logger = new LoggerFactory().CreateLogger<UserRepository>();
 
     [SetUp]
     public void Setup()
@@ -38,12 +30,11 @@ public class UserRepositoryTests
                 .AddContactPoint("0.0.0.0")
                 .Build());
 
-        var logger = new LoggerFactory().CreateLogger<UserRepository>();
-        var table = new Mock<Table<UserEntity>>(_session.Object);
-        _table = table;
+        _table = new Mock<Table<UserEntity>>(_session.Object);
+        ;
         _userRepository = new UserRepository(
-            table.Object,
-            logger);
+            _table.Object,
+            _logger);
         _session.Setup(_ =>
                 _.PrepareAsync(It.IsAny<string>()))
             .ReturnsAsync(new PreparedStatement())
@@ -59,7 +50,13 @@ public class UserRepositoryTests
     {
         var login = "login";
 
-        await _userRepository.TryGetUserAsync(login);
+        var row = new Mock<Row>();
+        row.Setup(r => r.GetValue<string>(0)).Returns("aboba");
+        _session.Setup(_ => _.ExecuteAsync(
+                It.IsAny<IStatement>(),
+                It.IsAny<string>()))
+            .ReturnsAsync(CreateMockRowSet(row.Object));
+        var result = await _userRepository.TryGetUserAsync(login);
         _session.Verify(_ => _.ExecuteAsync(
             It.Is<IStatement>(s =>
                 s.QueryValues.Length == 1
@@ -75,17 +72,30 @@ public class UserRepositoryTests
     }
 
     [Test]
-    public async Task TryGetUserAsync_ResultLengthMoreThanOne_ThrowException()
+    public void TryGetUserAsync_ResultLengthMoreThanOne_ThrowException()
     {
         var login = "login";
-
+        
         _session.Setup(_ => _.ExecuteAsync(
                 It.IsAny<IStatement>(),
                 It.IsAny<string>()))
-            .ReturnsAsync(CreateMockRowSet(new Mock<Row>().Object, new Mock<Row>().Object));
+            .ReturnsAsync(CreateMockRowSet(new Row(), new Row()));
 
-        var exceptionActual = Assert.ThrowsAsync<Exception>(
-            () => _userRepository.TryGetUserAsync(login));
+        var exceptionActual = Assert.ThrowsAsync<Exception>(async
+            () => await _userRepository.TryGetUserAsync(login));
         Assert.AreEqual("Key Login in User doesnt unique", exceptionActual.Message);
+    }
+
+    private RowSet CreateMockRowSet(params Row[] rows)
+    {
+        var mockList = new List<Row>();
+        mockList.AddRange(rows);
+        var rowSet = new Mock<RowSet>();
+
+        
+        // rowSet.Setup(rs => rs.Columns).Returns(columns);
+        rowSet.Setup(m => m.GetEnumerator()).Returns(mockList.GetEnumerator());
+        rowSet.Setup(rs => rs.Info).Returns(new ExecutionInfo());
+        return rowSet.Object;
     }
 }
