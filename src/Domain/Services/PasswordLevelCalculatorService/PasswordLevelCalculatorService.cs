@@ -10,7 +10,7 @@ public class PasswordLevelCalculatorService
     {
         // var usersHaveThisPassword = await _credentialByResourceRepository.FindUsersWithSamePasswordAsync(password);
         // if (usersHaveThisPassword.Any(l => l != userLogin)) return PasswordSecurityLevel.Compromised;
-        
+
         var score = 0;
 
         switch (password.Length)

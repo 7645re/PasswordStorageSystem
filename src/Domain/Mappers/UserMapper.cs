@@ -16,7 +16,7 @@ public static class UserMapper
             TokenExpire = userEntity.AccessTokenExpire,
         };
     }
-    
+
     public static UserEntity ToUserEntity(
         this UserCreate userCreate,
         TokenInfo accessToken)

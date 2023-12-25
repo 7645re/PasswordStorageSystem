@@ -15,7 +15,7 @@ public static class UserMapper
     {
         return new UserUpdate(userChangePasswordRequest.Login, userChangePasswordRequest.NewPassword);
     }
-    
+
     public static UserLogIn ToUserLogIn(this UserLogInRequest userLogInRequest)
     {
         return new UserLogIn(userLogInRequest.Login, userLogInRequest.Password);

@@ -5,9 +5,7 @@ namespace Domain.Models;
 [Table("credentials_by_resource", Keyspace = "password_storage_system")]
 public class CredentialByResourceEntity
 {
-    [PartitionKey]
-    [Column("user_login")]
-    public string UserLogin { get; set; } = string.Empty;
+    [PartitionKey] [Column("user_login")] public string UserLogin { get; set; } = string.Empty;
 
     [PartitionKey(1)]
     [Column("resource_name")]

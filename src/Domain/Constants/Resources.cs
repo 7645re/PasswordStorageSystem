@@ -3,7 +3,7 @@ namespace Domain.Constants;
 public static class Resources
 {
     public static readonly string AllSymbols = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-    
+
     public static readonly string[] Logins =
     {
         "user123",

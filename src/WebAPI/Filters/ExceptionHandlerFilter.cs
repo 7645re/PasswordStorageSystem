@@ -20,10 +20,10 @@ public class ExceptionHandlerFilter : IExceptionFilter
 
         context.Result = new ObjectResult(errorsResponse)
         {
-            StatusCode = (int)HttpStatusCode.BadRequest
+            StatusCode = (int) HttpStatusCode.BadRequest
         };
     }
-    
+
     private ExceptionDetail GetExceptionDetail(Exception exception, RouteData routeData)
     {
         var parameter = routeData.Values["action"]!.ToString()!;

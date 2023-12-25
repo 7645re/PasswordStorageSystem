@@ -1,34 +1,29 @@
 using Cassandra;
 using Cassandra.Data.Linq;
-using Domain.Options;
+using Domain.Factories;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 
 namespace Domain.Repositories;
 
 public abstract class CassandraRepositoryBase<T> where T : class
 {
-    protected readonly Table<T> Table;
+    public Table<T> Table { get; set; }
 
     private readonly ILogger _logger;
 
-    protected CassandraRepositoryBase(IOptions<CassandraOptions> cassandraOptions,
+    protected CassandraRepositoryBase(ICassandraSessionFactory sessionFactory,
         ILogger<CassandraRepositoryBase<T>> logger)
     {
         _logger = logger;
-        var options = cassandraOptions.Value;
-        var session = Cluster
-            .Builder()
-            .WithCredentials(options.UserName, options.Password)
-            .WithPort(options.Port)
-            .AddContactPoint(options.Address)
-            .Build()
-            .Connect();
-        session.CreateKeyspaceIfNotExists(options.KeySpace);
-        session.ChangeKeyspace(options.KeySpace);
-        
+        var session = sessionFactory.GetSession();
         Table = new Table<T>(session);
         Table.CreateIfNotExists();
+    }
+
+    protected CassandraRepositoryBase(Table<T> table, ILogger<CassandraRepositoryBase<T>> logger)
+    {
+        _logger = logger;
+        Table = table;
     }
 
     private void LogQueryTrace(QueryTrace? queryTrace)
@@ -47,7 +42,7 @@ public abstract class CassandraRepositoryBase<T> where T : class
         LogQueryTrace(query.QueryTrace);
         return result;
     }
-    
+
     protected async Task<IEnumerable<TQuery>> ExecuteQueryAsync<TQuery>(CqlQueryBase<TQuery> query)
     {
         query.EnableTracing();
@@ -70,7 +65,7 @@ public abstract class CassandraRepositoryBase<T> where T : class
         await query.ExecuteAsync();
         LogQueryTrace(query.QueryTrace);
     }
-    
+
     protected async Task ExecuteAsBatchAsync(IReadOnlyCollection<CqlCommand> commands)
     {
         // The library does not allow you to get a query trace from a executed batch
@@ -85,7 +80,7 @@ public abstract class CassandraRepositoryBase<T> where T : class
 
         _logger.LogInformation(batch.ToString());
     }
-    
+
     protected async Task AddAsync(T entity)
     {
         var query = Table.Insert(entity);
@@ -93,14 +88,14 @@ public abstract class CassandraRepositoryBase<T> where T : class
         await query.ExecuteAsync();
         LogQueryTrace(query.QueryTrace);
     }
-    
+
     protected CqlCommand AddQuery(T entity)
     {
         var query = Table.Insert(entity);
         query.EnableTracing();
         return query;
     }
-    
+
     protected async Task UpdateAsync(CqlUpdate query)
     {
         query.EnableTracing();

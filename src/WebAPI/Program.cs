@@ -1,3 +1,4 @@
+using Domain.Factories;
 using Domain.Options;
 using Domain.Repositories.UserRepository;
 using Domain.Services.TokenService;
@@ -11,6 +12,7 @@ builder.Services.Configure<CassandraOptions>(builder.Configuration.GetRequiredSe
 builder.Services.Configure<JwtOptions>(builder.Configuration.GetRequiredSection("Jwt"));
 
 builder.Logging.AddConsole();
+builder.Services.AddSingleton<ICassandraSessionFactory, CassandraSessionFactory>();
 builder.Services.AddSingleton<IUserValidator, UserValidator>();
 builder.Services.AddSingleton<IUserRepository, UserRepository>();
 builder.Services.AddTransient<IUserService, UserService>();

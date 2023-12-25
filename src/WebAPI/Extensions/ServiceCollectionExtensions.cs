@@ -42,7 +42,7 @@ public static class ServiceCollectionExtensions
 
         return services;
     }
-    
+
     public static IServiceCollection AddSwagger(this IServiceCollection services)
     {
         return services.AddSwaggerGen(c =>
@@ -71,7 +71,8 @@ public static class ServiceCollectionExtensions
         });
     }
 
-    public static AuthenticationBuilder AddJwt(this IServiceCollection services, ConfigurationManager configurationManager)
+    public static AuthenticationBuilder AddJwt(this IServiceCollection services,
+        ConfigurationManager configurationManager)
     {
         var key = Encoding.ASCII.GetBytes(configurationManager["Jwt:Key"]);
         return services.AddAuthentication(options =>

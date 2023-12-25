@@ -1,16 +1,19 @@
 using Cassandra.Data.Linq;
 using Domain.DTO;
+using Domain.Factories;
 using Domain.Models;
-using Domain.Options;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 
 namespace Domain.Repositories.UserRepository;
 
 public class UserRepository : CassandraRepositoryBase<UserEntity>, IUserRepository
 {
-    public UserRepository(IOptions<CassandraOptions> cassandraOptions, ILogger<UserRepository> logger) : base(
-        cassandraOptions, logger)
+    public UserRepository(ICassandraSessionFactory sessionFactory, ILogger<UserRepository> logger) : base(
+        sessionFactory, logger)
+    {
+    }
+
+    public UserRepository(Table<UserEntity> table, ILogger<UserRepository> logger) : base(table, logger)
     {
     }
 
@@ -20,12 +23,12 @@ public class UserRepository : CassandraRepositoryBase<UserEntity>, IUserReposito
         if (user == null) throw new Exception($"User with login {login} doesnt exist");
         return user;
     }
-    
+
     public async Task<UserEntity?> TryGetUserAsync(string login)
     {
         var users = (await ExecuteQueryAsync(Table.Where(r => r.Login == login))).ToArray();
         if (users.Length > 1) throw new Exception("Key Login in User doesnt unique");
-        return users.FirstOrDefault(); 
+        return users.FirstOrDefault();
     }
 
     public async Task CheckExistAsync(string login)
@@ -48,13 +51,13 @@ public class UserRepository : CassandraRepositoryBase<UserEntity>, IUserReposito
     public async Task ChangePasswordAsync(string login, string newPassword)
     {
         await CheckExistAsync(login);
-        await UpdateAsync(Table.Where(r => r.Login == login).Select(r => new { Password = newPassword }).Update());
+        await UpdateAsync(Table.Where(r => r.Login == login).Select(r => new {Password = newPassword}).Update());
     }
 
     public async Task ChangeAccessTokenAsync(string login, TokenInfo tokenInfo)
     {
         await CheckExistAsync(login);
         await UpdateAsync(Table.Where(r => r.Login == login)
-            .Select(r => new { AccessToken = tokenInfo.Token, AccessTokenExpire = tokenInfo.Expire }).Update());
+            .Select(r => new {AccessToken = tokenInfo.Token, AccessTokenExpire = tokenInfo.Expire}).Update());
     }
 }
