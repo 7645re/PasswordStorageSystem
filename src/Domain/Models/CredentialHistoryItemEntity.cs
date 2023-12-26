@@ -14,5 +14,6 @@ public class CredentialHistoryItemEntity
     [Column("changed_at")]
     public DateTimeOffset ChangedAt { get; set; }
 
-    [Column("resource_password")] public string ResourcePassword { get; set; } = string.Empty;
+    [Column("resource_password")]
+    public string ResourcePassword { get; set; } = string.Empty;
 }
