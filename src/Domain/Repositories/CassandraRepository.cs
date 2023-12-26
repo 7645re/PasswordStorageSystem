@@ -19,13 +19,14 @@ public abstract class CassandraRepositoryBase<T> where T : class
         Table = new Table<T>(session);
         Table.CreateIfNotExists();
     }
-
+    
+    // constructor so that you can replace the table for tests
     protected CassandraRepositoryBase(Table<T> table, ILogger<CassandraRepositoryBase<T>> logger)
     {
         _logger = logger;
         Table = table;
     }
-
+    
     private void LogQueryTrace(QueryTrace? queryTrace)
     {
         if (queryTrace == null) return;
@@ -68,7 +69,7 @@ public abstract class CassandraRepositoryBase<T> where T : class
 
     protected async Task ExecuteAsBatchAsync(IReadOnlyCollection<CqlCommand> commands)
     {
-        // The library does not allow you to get a query trace from a executed batch
+        // For unknown reasons, it is not possible to retrieve a query tracking if it uses batch
         foreach (var cqlCommand in commands)
             cqlCommand.EnableTracing();
         var batch = Table

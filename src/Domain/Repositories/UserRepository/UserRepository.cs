@@ -31,32 +31,28 @@ public class UserRepository : CassandraRepositoryBase<UserEntity>, IUserReposito
         return users.FirstOrDefault();
     }
 
-    public async Task CheckExistAsync(string login)
-    {
-        await GetUserAsync(login);
-    }
-
     public async Task DeleteUserAsync(string login)
     {
-        await CheckExistAsync(login);
+        await GetUserAsync(login);
         await ExecuteQueryAsync(Table.Where(r => r.Login == login).Delete());
     }
 
     public async Task CreateUserAsync(UserEntity userEntity)
     {
-        await CheckExistAsync(userEntity.Login);
+        var userEntityExist = await TryGetUserAsync(userEntity.Login);
+        if (userEntityExist is not null) throw new Exception($"User already exist");
         await AddAsync(userEntity);
     }
 
     public async Task ChangePasswordAsync(string login, string newPassword)
     {
-        await CheckExistAsync(login);
+        await GetUserAsync(login);
         await UpdateAsync(Table.Where(r => r.Login == login).Select(r => new {Password = newPassword}).Update());
     }
 
     public async Task ChangeAccessTokenAsync(string login, TokenInfo tokenInfo)
     {
-        await CheckExistAsync(login);
+        await GetUserAsync(login);
         await UpdateAsync(Table.Where(r => r.Login == login)
             .Select(r => new {AccessToken = tokenInfo.Token, AccessTokenExpire = tokenInfo.Expire}).Update());
     }
