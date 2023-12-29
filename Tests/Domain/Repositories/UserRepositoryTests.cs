@@ -14,7 +14,9 @@ public class UserRepositoryTests
     private IUserRepository _userRepository = null!;
     private Mock<Table<UserEntity>> _table = null!;
     private Mock<ISession> _session = null!;
-    private readonly ILogger<UserRepository> _logger = new LoggerFactory().CreateLogger<UserRepository>();
+
+    private readonly ILogger<UserRepository> _logger = new LoggerFactory()
+        .CreateLogger<UserRepository>();
 
     [SetUp]
     public void Setup()
@@ -33,9 +35,6 @@ public class UserRepositoryTests
         _userRepository = new UserRepository(
             _table.Object,
             _logger);
-        _session.Setup(_ =>
-                _.PrepareAsync(It.IsAny<string>()))
-            .ReturnsAsync(new PreparedStatement());
     }
 
     [Test]
@@ -50,28 +49,24 @@ public class UserRepositoryTests
             AccessTokenExpire = DateTimeOffset.Now
         };
         var row = CreateMockRow(userEntity);
-        _session.Setup(_ => _.ExecuteAsync(
-                It.Is<IStatement>(s =>
-                    s.QueryValues.Length == 1
-                    && s.QueryValues
-                        .First()
-                        .ToString() == userEntity.Login),
-                It.IsAny<string>()))
-            .ReturnsAsync(CreateMockRowSet(row))
-            .Verifiable(Times.Once);
+        _session.SetupExecuteAsync(
+            new object[] {userEntity.Login},
+            CreateMockRowSet(row),
+            Times.Once());
+        _session.SetupPrepareAsync(
+            _table
+                .Object
+                .Where(t => t.Login == userEntity.Login)
+                .ToString(),
+            Times.Once());
 
         // Act
         var userEntityActual = await _userRepository.GetUserAsync(userEntity.Login);
 
         // Assert
         _session.Verify();
-        _session.Verify(_ =>
-            _.PrepareAsync(It.Is<string>(q => q == _table
-                .Object
-                .Where(t => t.Login == userEntity.Login)
-                .ToString())), Times.Once);
         Assert.IsNotNull(userEntityActual);
-        Assert.AreEqual(CreateUserEntityForCompare(userEntity), CreateUserEntityForCompare(userEntityActual!));
+        Assert.AreEqual(CreateUserEntityForCompare(userEntity), CreateUserEntityForCompare(userEntityActual));
     }
 
     [Test]
@@ -79,24 +74,17 @@ public class UserRepositoryTests
     {
         // Arrange
         const string login = "login";
-        _session.Setup(_ => _.ExecuteAsync(
-                It.Is<IStatement>(s =>
-                    s.QueryValues.Length == 1
-                    && s.QueryValues
-                        .First()
-                        .ToString() == login),
-                It.IsAny<string>()))
-            .ReturnsAsync(CreateMockRowSet())
-            .Verifiable(Times.Once);
+        _session.SetupExecuteAsync(new object[] {login}, CreateMockRowSet(), Times.Once());
+        _session.SetupPrepareAsync(
+            _table
+                .Object
+                .Where(t => t.Login == login)
+                .ToString(),
+            Times.Once());
 
         // Act / Assert
         var actualException = Assert.ThrowsAsync<Exception>(async () => await _userRepository.GetUserAsync(login));
         _session.Verify();
-        _session.Verify(_ =>
-            _.PrepareAsync(It.Is<string>(q => q == _table
-                .Object
-                .Where(t => t.Login == login)
-                .ToString())), Times.Once);
         Assert.AreEqual($"User with login {login} doesnt exist", actualException!.Message);
     }
 
@@ -104,26 +92,23 @@ public class UserRepositoryTests
     public async Task TryGetUserAsync_HasNotUser_ReturnNull()
     {
         // Arrange
-        _session.Setup(_ => _.ExecuteAsync(
-                It.Is<IStatement>(s =>
-                    s.QueryValues.Length == 1
-                    && s.QueryValues
-                        .First()
-                        .ToString() == string.Empty),
-                It.IsAny<string>()))
-            .ReturnsAsync(CreateMockRowSet())
-            .Verifiable(Times.Once);
+        const string login = "login";
+        _session.SetupExecuteAsync(
+            new object[] {login},
+            CreateMockRowSet(),
+            Times.Once());
+        _session.SetupPrepareAsync(
+            _table
+                .Object
+                .Where(t => t.Login == login)
+                .ToString(),
+            Times.Once());
 
         // Act
-        var userEntityActual = await _userRepository.TryGetUserAsync(string.Empty);
+        var userEntityActual = await _userRepository.TryGetUserAsync(login);
 
         // Assert
         _session.Verify();
-        _session.Verify(_ =>
-            _.PrepareAsync(It.Is<string>(q => q == _table
-                .Object
-                .Where(t => t.Login == string.Empty)
-                .ToString())), Times.Once);
         Assert.IsNull(userEntityActual);
     }
 
@@ -139,26 +124,22 @@ public class UserRepositoryTests
             AccessTokenExpire = DateTimeOffset.Now
         };
         var row = CreateMockRow(userEntity);
-        _session.Setup(_ => _.ExecuteAsync(
-                It.Is<IStatement>(s =>
-                    s.QueryValues.Length == 1
-                    && s.QueryValues
-                        .First()
-                        .ToString() == userEntity.Login),
-                It.IsAny<string>()))
-            .ReturnsAsync(CreateMockRowSet(row))
-            .Verifiable(Times.Once);
+        _session.SetupExecuteAsync(
+            new object[] {userEntity.Login},
+            CreateMockRowSet(row),
+            Times.Once());
+        _session.SetupPrepareAsync(
+            _table
+                .Object
+                .Where(t => t.Login == userEntity.Login)
+                .ToString(),
+            Times.Once());
 
         // Act
         var userEntityActual = await _userRepository.TryGetUserAsync(userEntity.Login);
 
         // Assert
         _session.Verify();
-        _session.Verify(_ =>
-            _.PrepareAsync(It.Is<string>(q => q == _table
-                .Object
-                .Where(t => t.Login == userEntity.Login)
-                .ToString())), Times.Once);
         Assert.IsNotNull(userEntityActual);
         Assert.AreEqual(CreateUserEntityForCompare(userEntity), CreateUserEntityForCompare(userEntityActual!));
     }
@@ -175,25 +156,21 @@ public class UserRepositoryTests
             AccessTokenExpire = DateTimeOffset.Now
         };
         var row = CreateMockRow(userEntity);
-        _session.Setup(_ => _.ExecuteAsync(
-                It.Is<IStatement>(s =>
-                    s.QueryValues.Length == 1
-                    && s.QueryValues
-                        .First()
-                        .ToString() == userEntity.Login),
-                It.IsAny<string>()))
-            .ReturnsAsync(CreateMockRowSet(row, row))
-            .Verifiable(Times.Once);
+        _session.SetupExecuteAsync(
+            new object[] {userEntity.Login},
+            CreateMockRowSet(row, row),
+            Times.Once());
+        _session.SetupPrepareAsync(
+            _table
+                .Object
+                .Where(t => t.Login == userEntity.Login)
+                .ToString(),
+            Times.Once());
 
         // Act / Assert
         var exceptionActual = Assert.ThrowsAsync<Exception>(
             async () => await _userRepository.TryGetUserAsync(userEntity.Login));
         _session.Verify();
-        _session.Verify(_ =>
-            _.PrepareAsync(It.Is<string>(q => q == _table
-                .Object
-                .Where(t => t.Login == userEntity.Login)
-                .ToString())), Times.Once);
         Assert.AreEqual("Key Login in User doesnt unique", exceptionActual!.Message);
     }
 
@@ -209,32 +186,29 @@ public class UserRepositoryTests
             AccessTokenExpire = DateTimeOffset.Now
         };
         var row = CreateMockRow(userEntity);
-        _session.Setup(_ => _.ExecuteAsync(
-                It.Is<IStatement>(s =>
-                    s.QueryValues.Length == 1
-                    && s.QueryValues
-                        .First()
-                        .ToString() == userEntity.Login),
-                It.IsAny<string>()))
-            .ReturnsAsync(CreateMockRowSet(row))
-            .Verifiable(Times.Exactly(2));
+        _session.SetupExecuteAsync(
+            new object[] {userEntity.Login},
+            CreateMockRowSet(row),
+            Times.Exactly(2));
+        _session.SetupPrepareAsync(
+            _table
+                .Object
+                .Where(t => t.Login == userEntity.Login)
+                .ToString(),
+            Times.Once());
+        _session.SetupPrepareAsync(
+            _table
+                .Object
+                .Where(t => t.Login == userEntity.Login)
+                .Delete()
+                .ToString(),
+            Times.Once());
 
         // Act
         await _userRepository.DeleteUserAsync(userEntity.Login);
 
         // Assert
         _session.Verify();
-        _session.Verify(_ =>
-            _.PrepareAsync(It.Is<string>(q => q == _table
-                .Object
-                .Where(t => t.Login == userEntity.Login)
-                .ToString())), Times.Once);
-        _session.Verify(_ =>
-            _.PrepareAsync(It.Is<string>(q => q == _table
-                .Object
-                .Where(t => t.Login == userEntity.Login)
-                .Delete()
-                .ToString())), Times.Once);
     }
 
     [Test]
@@ -242,24 +216,20 @@ public class UserRepositoryTests
     {
         // Arrange
         var login = "login";
-        _session.Setup(_ => _.ExecuteAsync(
-                It.Is<IStatement>(s =>
-                    s.QueryValues.Length == 1
-                    && s.QueryValues
-                        .First()
-                        .ToString() == login),
-                It.IsAny<string>()))
-            .ReturnsAsync(CreateMockRowSet())
-            .Verifiable(Times.Once);
+        _session.SetupExecuteAsync(
+            new object[] {login},
+            CreateMockRowSet(),
+            Times.Once());
+        _session.SetupPrepareAsync(
+            _table
+                .Object
+                .Where(t => t.Login == login)
+                .ToString(),
+            Times.Once());
 
         // Act / Assert
         var exceptionActual = Assert.ThrowsAsync<Exception>(async () => await _userRepository.DeleteUserAsync(login));
         _session.Verify();
-        _session.Verify(_ =>
-            _.PrepareAsync(It.Is<string>(q => q == _table
-                .Object
-                .Where(t => t.Login == login)
-                .ToString())), Times.Once);
         Assert.AreEqual($"User with login {login} doesnt exist", exceptionActual!.Message);
     }
 
@@ -274,44 +244,37 @@ public class UserRepositoryTests
             AccessToken = Guid.NewGuid().ToString(),
             AccessTokenExpire = DateTimeOffset.Now
         };
-        _session.Setup(_ => _.ExecuteAsync(
-                It.Is<IStatement>(s =>
-                    s.QueryValues.Length == 1
-                    && s.QueryValues
-                        .First()
-                        .ToString() == userEntity.Login),
-                It.IsAny<string>()))
-            .ReturnsAsync(CreateMockRowSet())
-            .Verifiable(Times.Once);
-        _session.Setup(_ => _.ExecuteAsync(
-                It.Is<IStatement>(s =>
-                    s.QueryValues.Length == 4
-                    && s.QueryValues.SequenceEqual(new List<object>
-                    {
-                        userEntity.AccessToken,
-                        userEntity.AccessTokenExpire,
-                        userEntity.Login,
-                        userEntity.Password
-                    })),
-                It.IsAny<string>()))
-            .ReturnsAsync(CreateMockRowSet())
-            .Verifiable(Times.Once);
+        _session.SetupExecuteAsync(
+            new object[] {userEntity.Login},
+            CreateMockRowSet(),
+            Times.Once());
+        _session.SetupExecuteAsync(
+            new object[]
+            {
+                userEntity.AccessToken,
+                userEntity.AccessTokenExpire,
+                userEntity.Login,
+                userEntity.Password
+            },
+            CreateMockRowSet(),
+            Times.Once());
+        _session.SetupPrepareAsync(
+            _table
+                .Object
+                .Where(t => t.Login == userEntity.Login)
+                .ToString(),
+            Times.Once());
+        _session.SetupPrepareAsync(
+            _table
+                .Object
+                .Insert(userEntity)
+                .ToString(), Times.Once());
 
         // Act
         await _userRepository.CreateUserAsync(userEntity);
 
         // Assert
         _session.Verify();
-        _session.Verify(_ =>
-            _.PrepareAsync(It.Is<string>(q => q == _table
-                .Object
-                .Where(t => t.Login == userEntity.Login)
-                .ToString())), Times.Once);
-        _session.Verify(_ =>
-            _.PrepareAsync(It.Is<string>(q => q == _table
-                .Object
-                .Insert(userEntity)
-                .ToString())), Times.Once);
     }
 
     [Test]
@@ -325,25 +288,22 @@ public class UserRepositoryTests
             AccessToken = Guid.NewGuid().ToString(),
             AccessTokenExpire = DateTimeOffset.Now
         };
-        _session.Setup(_ => _.ExecuteAsync(
-                It.Is<IStatement>(s =>
-                    s.QueryValues.Length == 1
-                    && s.QueryValues
-                        .First()
-                        .ToString() == userEntity.Login),
-                It.IsAny<string>()))
-            .ReturnsAsync(CreateMockRowSet(CreateMockRow(userEntity)))
-            .Verifiable(Times.Once);
+        var row = CreateMockRow(userEntity);
+        _session.SetupExecuteAsync(
+            new object[] {userEntity.Login},
+            CreateMockRowSet(row),
+            Times.Once());
+        _session.SetupPrepareAsync(
+            _table
+                .Object
+                .Where(t => t.Login == userEntity.Login)
+                .ToString(),
+            Times.Once());
 
         // Act / Assert
         var exceptionActual =
             Assert.ThrowsAsync<Exception>(async () => await _userRepository.CreateUserAsync(userEntity));
         _session.Verify();
-        _session.Verify(_ =>
-            _.PrepareAsync(It.Is<string>(q => q == _table
-                .Object
-                .Where(t => t.Login == userEntity.Login)
-                .ToString())), Times.Once);
         Assert.AreEqual($"User already exist", exceptionActual!.Message);
     }
 
@@ -358,26 +318,25 @@ public class UserRepositoryTests
             AccessToken = Guid.NewGuid().ToString(),
             AccessTokenExpire = DateTimeOffset.Now
         };
-        _session.Setup(_ => _.ExecuteAsync(
-                It.Is<IStatement>(s =>
-                    s.QueryValues.Length == 1
-                    && s.QueryValues
-                        .First()
-                        .ToString() == userEntity.Login),
-                It.IsAny<string>()))
-            .ReturnsAsync(CreateMockRowSet())
-            .Verifiable(Times.Once);
+        _session.SetupExecuteAsync(
+            new object[]
+            {
+                userEntity.Login
+            },
+            CreateMockRowSet(),
+            Times.Once());
+        _session.SetupPrepareAsync(
+            _table
+                .Object
+                .Where(t => t.Login == userEntity.Login)
+                .ToString(),
+            Times.Once());
 
         // Act / Assert
         var exceptionActual =
             Assert.ThrowsAsync<Exception>(async () =>
                 await _userRepository.ChangePasswordAsync(userEntity.Login, userEntity.Password));
         _session.Verify();
-        _session.Verify(_ =>
-            _.PrepareAsync(It.Is<string>(q => q == _table
-                .Object
-                .Where(t => t.Login == userEntity.Login)
-                .ToString())), Times.Once);
         Assert.AreEqual($"User with login {userEntity.Login} doesnt exist", exceptionActual!.Message);
     }
 
@@ -392,44 +351,42 @@ public class UserRepositoryTests
             AccessToken = Guid.NewGuid().ToString(),
             AccessTokenExpire = DateTimeOffset.Now
         };
-        _session.Setup(_ => _.ExecuteAsync(
-                It.Is<IStatement>(s =>
-                    s.QueryValues.Length == 1
-                    && s.QueryValues
-                        .First()
-                        .ToString() == userEntity.Login),
-                It.IsAny<string>()))
-            .ReturnsAsync(CreateMockRowSet(CreateMockRow(userEntity)))
-            .Verifiable(Times.Once);
-        _session.Setup(_ => _.ExecuteAsync(
-                It.Is<IStatement>(s =>
-                    s.QueryValues.Length == 2
-                    && s.QueryValues.SequenceEqual(new List<object>
-                    {
-                        userEntity.Password,
-                        userEntity.Login
-                    })),
-                It.IsAny<string>()))
-            .ReturnsAsync(CreateMockRowSet())
-            .Verifiable(Times.Once);
+        _session.SetupExecuteAsync(
+            new object[]
+            {
+                userEntity.Login
+            },
+            CreateMockRowSet(CreateMockRow(userEntity)),
+            Times.Once());
+        _session.SetupExecuteAsync(
+            new object[]
+            {
+                userEntity.Password,
+                userEntity.Login
+            },
+            CreateMockRowSet(),
+            Times.Once());
+        _session.SetupPrepareAsync(
+            _table
+                .Object
+                .Where(t => t.Login == userEntity.Login)
+                .ToString(),
+            Times.Once()
+        );
+        _session.SetupPrepareAsync(
+            _table
+                .Object
+                .Where(r => r.Login == userEntity.Login)
+                .Select(r => new {Password = string.Empty})
+                .Update()
+                .ToString(),
+            Times.Once());
 
         // Act
         await _userRepository.ChangePasswordAsync(userEntity.Login, userEntity.Password);
 
         // Assert
         _session.Verify();
-        _session.Verify(_ =>
-            _.PrepareAsync(It.Is<string>(q => q == _table
-                .Object
-                .Where(t => t.Login == userEntity.Login)
-                .ToString())), Times.Once);
-        _session.Verify(_ =>
-            _.PrepareAsync(It.Is<string>(q => q == _table
-                .Object
-                .Where(r => r.Login == userEntity.Login)
-                .Select(r => new {Password = string.Empty})
-                .Update()
-                .ToString())), Times.Once);
     }
 
     [Test]
@@ -444,45 +401,42 @@ public class UserRepositoryTests
             AccessTokenExpire = DateTimeOffset.Now
         };
         var token = new TokenInfo(Guid.NewGuid().ToString(), DateTimeOffset.Now);
-        _session.Setup(_ => _.ExecuteAsync(
-                It.Is<IStatement>(s =>
-                    s.QueryValues.Length == 1
-                    && s.QueryValues
-                        .First()
-                        .ToString() == userEntity.Login),
-                It.IsAny<string>()))
-            .ReturnsAsync(CreateMockRowSet(CreateMockRow(userEntity)))
-            .Verifiable(Times.Once);
-        _session.Setup(_ => _.ExecuteAsync(
-                It.Is<IStatement>(s =>
-                    s.QueryValues.Length == 3
-                    && s.QueryValues.SequenceEqual(new List<object>
-                    {
-                        token.Token,
-                        token.Expire,
-                        userEntity.Login
-                    })),
-                It.IsAny<string>()))
-            .ReturnsAsync(CreateMockRowSet())
-            .Verifiable(Times.Once);
+        _session.SetupExecuteAsync(
+            new object[]
+            {
+                userEntity.Login
+            },
+            CreateMockRowSet(CreateMockRow(userEntity)),
+            Times.Once());
+        _session.SetupExecuteAsync(
+            new object[]
+            {
+                token.Token,
+                token.Expire,
+                userEntity.Login
+            },
+            CreateMockRowSet(),
+            Times.Once());
+        _session.SetupPrepareAsync(
+            _table
+                .Object
+                .Where(t => t.Login == userEntity.Login)
+                .ToString(),
+            Times.Once());
+        _session.SetupPrepareAsync(
+            _table
+                .Object
+                .Where(r => r.Login == userEntity.Login)
+                .Select(r => new {AccessToken = string.Empty, AccessTokenExpire = string.Empty})
+                .Update()
+                .ToString(),
+            Times.Once());
 
         // Act
         await _userRepository.ChangeAccessTokenAsync(userEntity.Login, token);
 
         // Assert
         _session.Verify();
-        _session.Verify(_ =>
-            _.PrepareAsync(It.Is<string>(q => q == _table
-                .Object
-                .Where(t => t.Login == userEntity.Login)
-                .ToString())), Times.Once);
-        _session.Verify(_ =>
-            _.PrepareAsync(It.Is<string>(q => q == _table
-                .Object
-                .Where(r => r.Login == userEntity.Login)
-                .Select(r => new {AccessToken = string.Empty, AccessTokenExpire = string.Empty})
-                .Update()
-                .ToString())), Times.Once);
     }
 
     [Test]
@@ -490,27 +444,27 @@ public class UserRepositoryTests
     {
         // Arrange
         const string login = "login";
-        _session.Setup(_ => _.ExecuteAsync(
-                It.Is<IStatement>(s =>
-                    s.QueryValues.Length == 1
-                    && s.QueryValues
-                        .First()
-                        .ToString() == login),
-                It.IsAny<string>()))
-            .ReturnsAsync(CreateMockRowSet())
-            .Verifiable(Times.Once);
+        _session.SetupExecuteAsync(
+            new object[]
+            {
+                login
+            },
+            CreateMockRowSet(),
+            Times.Once());
+        _session.SetupPrepareAsync(
+            _table
+                .Object
+                .Where(t => t.Login == login)
+                .ToString(),
+            Times.Once()
+        );
 
         // Act / Assert
         var exceptionActual = Assert.ThrowsAsync<Exception>(async () =>
             await _userRepository.ChangeAccessTokenAsync(login, new TokenInfo(string.Empty, DateTimeOffset.Now))
         );
         _session.Verify();
-        _session.Verify(_ =>
-            _.PrepareAsync(It.Is<string>(q => q == _table
-                .Object
-                .Where(t => t.Login == login)
-                .ToString())), Times.Once);
-        Assert.AreEqual($"User with login {login} doesnt exist", exceptionActual.Message);
+        Assert.AreEqual($"User with login {login} doesnt exist", exceptionActual!.Message);
     }
 
     private record UserEntityForCompare(string Login, string Password, string AccessToken,
@@ -547,6 +501,9 @@ public class UserRepositoryTests
 
     private CqlColumn[] CreateColumns()
     {
+        // Reflection could be used here, but one problem remains,
+        // how will the mapping of types like string -> ascii, string -> text will work,
+        // so far there is no answer to this
         var accessTokenColumn = new CqlColumn
         {
             Keyspace = "password_storage_system",
