@@ -1,4 +1,5 @@
 using Cassandra.Mapping.Attributes;
+using Domain.Enums;
 
 namespace Domain.Models;
 
@@ -10,9 +11,10 @@ public class CredentialCountBySecurityLevelEntity
     public string UserLogin { get; set; } = string.Empty;
 
     [PartitionKey(1)]
-    [Column("password_security_level")]
-    public int PasswordSecurityLevel { get; set; }
-
+    [Column("password_security_level", Type = typeof(int))]
+    public PasswordSecurityLevel PasswordSecurityLevel { get; set; }
+    
     [Column("count")]
-    public int Count { get; set; }
+    [Counter]
+    public long Count { get; set; }
 }

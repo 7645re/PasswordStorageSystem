@@ -18,27 +18,26 @@ public static class ServiceCollectionExtensions
                     options.Filters.Add<ExceptionHandlerFilter>()
             );
 
-        services
-            .Configure<ApiBehaviorOptions>(options =>
+        services.Configure<ApiBehaviorOptions>(options =>
+        {
+            options.InvalidModelStateResponseFactory = context =>
             {
-                options.InvalidModelStateResponseFactory = context =>
+                var errorsResponse = new ExceptionsResponse
                 {
-                    var errorsResponse = new ExceptionsResponse()
-                    {
-                        Exceptions = context.ModelState.Select(item =>
-                            new ExceptionDetail()
-                            {
-                                Error = "Model validation error",
-                                Parameter = item.Key,
-                                Code = Guid.Empty,
-                                Message =
-                                    string.Join("\n", item.Value!.Errors.Select(e => e.ErrorMessage))
-                            }
-                        ).ToArray()
-                    };
-                    return new BadRequestObjectResult(errorsResponse);
+                    Exceptions = context.ModelState.Select(item =>
+                        new ExceptionDetail
+                        {
+                            Error = "Model validation error",
+                            Parameter = item.Key,
+                            Code = Guid.Empty,
+                            Message =
+                                string.Join("\n", item.Value!.Errors.Select(e => e.ErrorMessage))
+                        }
+                    ).ToArray()
                 };
-            });
+                return new BadRequestObjectResult(errorsResponse);
+            };
+        });
 
         return services;
     }

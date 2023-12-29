@@ -14,6 +14,10 @@ public class CredentialEntity
     [ClusteringKey(0, SortOrder.Descending)]
     [Column("created_at")]
     public DateTimeOffset CreatedAt { get; set; }
+    
+    [ClusteringKey(1, SortOrder.Descending)]
+    [Column("id")]
+    public Guid Id { get; set; }
 
     [Column("resource_name")]
     public string ResourceName { get; set; } = string.Empty;
@@ -29,7 +33,4 @@ public class CredentialEntity
 
     [Column("changed_at")]
     public DateTimeOffset? ChangedAt { get; set; }
-
-    [Column("id")]
-    public Guid Id { get; set; }
 }

@@ -11,10 +11,11 @@ namespace WebAPI.Controllers;
 [Route("/credentials")]
 public class CredentialController : ControllerBase
 {
-    [HttpGet("count")]
-    public async Task<IActionResult> GetCredentialsCountAsync()
+    private readonly ICredentialService _credentialService;
+
+    public CredentialController(ICredentialService credentialService)
     {
-        return Ok();
+        _credentialService = credentialService;
     }
 
     [HttpGet("passwords-security-levels")]
@@ -24,7 +25,7 @@ public class CredentialController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetCredentialsAsync()
+    public async Task<IActionResult> GetCredentialsAsync(int page)
     {
         return Ok();
     }
@@ -43,12 +44,6 @@ public class CredentialController : ControllerBase
 
     [HttpPost]
     public async Task<IActionResult> CreateCredentialAsync([FromBody] CredentialCreateRequest credentialCreateRequest)
-    {
-        return Ok();
-    }
-
-    [HttpPost("generate")]
-    public async Task<IActionResult> GenerateCredentialAsync([FromQuery] int count)
     {
         return Ok();
     }

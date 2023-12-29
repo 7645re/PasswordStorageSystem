@@ -1,33 +1,17 @@
-using Domain.DTO;
 using Domain.DTO.Credential;
+using Domain.Enums;
 using WebAPI.DTO.Request;
 
 namespace WebAPI.Mappers;
 
 public static class CredentialMapper
 {
-    public static CredentialDelete ToCredentialDelete(this CredentialDeleteRequest credentialDeleteRequest,
-        string userLogin)
+    public static CredentialCreate ToCredentialCreate(this CredentialCreateRequest createRequest, string userLogin)
     {
-        return new CredentialDelete(userLogin, credentialDeleteRequest.ResourceName,
-            credentialDeleteRequest.ResourceLogin);
-    }
-
-    public static CredentialCreate ToCredentialCreate(this CredentialCreateRequest credentialCreateRequest,
-        string userLogin)
-    {
-        return new CredentialCreate(userLogin,
-            credentialCreateRequest.ResourceName,
-            credentialCreateRequest.ResourceLogin,
-            credentialCreateRequest.ResourcePassword);
-    }
-
-    public static CredentialUpdate ToCredentialUpdate(this CredentialUpdateRequest credentialUpdateRequest,
-        string userLogin)
-    {
-        return new CredentialUpdate(userLogin,
-            credentialUpdateRequest.ResourceName,
-            credentialUpdateRequest.ResourceLogin,
-            credentialUpdateRequest.NewResourcePassword);
+        return new CredentialCreate(
+            userLogin,
+            createRequest.ResourceName,
+            createRequest.ResourceLogin,
+            createRequest.ResourcePassword);
     }
 }

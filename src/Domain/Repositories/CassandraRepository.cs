@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using Cassandra;
 using Cassandra.Data.Linq;
 using Domain.Factories;
@@ -69,14 +70,10 @@ public abstract class CassandraRepositoryBase<T> where T : class
 
     protected async Task ExecuteAsBatchAsync(IReadOnlyCollection<CqlCommand> commands)
     {
-        // For unknown reasons, it is not possible to retrieve a query tracking if it uses batch
-        foreach (var cqlCommand in commands)
-            cqlCommand.EnableTracing();
         var batch = Table
             .GetSession()
             .CreateBatch()
             .Append(commands);
-        batch.EnableTracing();
         await batch.ExecuteAsync();
 
         _logger.LogInformation(batch.ToString());
@@ -93,6 +90,15 @@ public abstract class CassandraRepositoryBase<T> where T : class
     protected CqlCommand AddQuery(T entity)
     {
         var query = Table.Insert(entity);
+        query.EnableTracing();
+        return query;
+    }
+
+    protected CqlCommand DeleteQuery(Expression<Func<T, bool>> predicate)
+    {
+        var query = Table
+            .Where(predicate)
+            .Delete();
         query.EnableTracing();
         return query;
     }
