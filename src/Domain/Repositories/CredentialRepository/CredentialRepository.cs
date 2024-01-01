@@ -59,10 +59,6 @@ public class CredentialRepository : CassandraRepositoryBase<CredentialEntity>, I
         return credential;
     }
 
-    record PagedQuery(byte[]? State, bool PageIsEmpty);
-
-    record CredentialPagination(int PageCount, PagedQuery[] PagedQueries);
-
     public async Task<CredentialEntity[]> GetCredentialsByLoginPagedAsync(string login, int pageSize, int pageNumber)
     {
         if (pageNumber <= 0)
@@ -70,58 +66,30 @@ public class CredentialRepository : CassandraRepositoryBase<CredentialEntity>, I
         if (pageSize <= 0)
             throw new ArgumentException("Page size cannot be less or equal zero");
 
-        var cacheKey = $"{login}_{typeof(CredentialPagination)}_{pageSize}";
-        _memoryCache.TryGetValue(cacheKey,
-            out CredentialPagination cachedCredentialPagination);
-        if (cachedCredentialPagination == null)
-        {
-            var count = await ExecuteQueryAsync(
-                Table
-                    .Where(e => e.UserLogin == login)
-                    .Count());
-            var pageCount = (int)Math.Ceiling((decimal) (count / pageSize));
-            cachedCredentialPagination = new CredentialPagination(pageNumber, new PagedQuery[pageCount]);
-            _memoryCache.Set(cacheKey, cachedCredentialPagination);
-        }
+        var previousCacheKey = $"{login}_credential_pagination_{pageSize}_{pageNumber - 1}";
+        var currentCacheKey = $"{login}_credential_pagination_{pageSize}_{pageNumber}";
 
-        if (pageNumber > cachedCredentialPagination.PageCount)
-            throw new ArgumentException($"Page with number {pageNumber} doesnt exist");
-        
-        IPage<CredentialEntity>? credentials;
-        CredentialEntity[]? result;
         if (pageNumber == 1)
         {
-            credentials = await ExecuteQueryPagedAsync(Table
-                .Where(r => r.UserLogin == login)
-                .SetPageSize(pageSize));
-            result = credentials.ToArray();
-            _memoryCache.Set(cacheKey,
-                new PagedQuery(
-                    credentials.PagingState,
-                    result.Length <= 0));
-            return result;
+            var credentialsFirstPage = await ExecuteQueryPagedAsync(
+                Table
+                    .Where(r => r.UserLogin == login)
+                    .SetPageSize(pageSize));
+            _memoryCache.Set(currentCacheKey, credentialsFirstPage.PagingState);
+            return credentialsFirstPage.ToArray();
         }
 
-        var previousCacheKey = $"{login}_{pageSize}_{pageNumber - 1}";
-        _memoryCache.TryGetValue(previousCacheKey, out PagedQuery previousPagedQuery);
+        _memoryCache.TryGetValue(previousCacheKey, out byte[] previousState);
+        if (previousState == null)
+            throw new InvalidOperationException("Pages can only be requested sequentially");
 
-        if (previousPagedQuery is null)
-            throw new Exception("Pages can only be requested sequentially");
-        if (previousPagedQuery.PageIsEmpty)
-            return Array.Empty<CredentialEntity>();
-
-        credentials = await ExecuteQueryPagedAsync(Table
-            .Where(r => r.UserLogin == login)
-            .SetPageSize(pageSize)
-            .SetPagingState(previousPagedQuery.State));
-
-        result = credentials.ToArray();
-
-        _memoryCache.Set(currentCacheKey,
-            new PagedQuery(
-                credentials.PagingState,
-                result.Length <= 0));
-        return result;
+        var credentials = await ExecuteQueryPagedAsync(
+            Table
+                .Where(r => r.UserLogin == login)
+                .SetPageSize(pageSize)
+                .SetPagingState(previousState));
+        _memoryCache.Set(currentCacheKey, credentials.PagingState);
+        return credentials.ToArray();
     }
 
     public async Task CreateCredentialAsync(CredentialEntity credentialEntity)
