@@ -1,16 +1,14 @@
-using Cassandra.Data.Linq;
 using Domain.Models;
 
 namespace Domain.Repositories.CredentialCountBySecurityLevelRepository;
 
 public interface ICredentialCountBySecurityLevelRepository
 {
-    CqlCommand CreateCredentialCountBySecurityLevelQuery(
-        CredentialCountBySecurityLevelEntity credentialCountBySecurityLevelEntity);
+    Task CreateCountersForEachSecurityLevelAsync(string userLogin);
 
-    CqlCommand DeleteCredentialCountBySecurityLevelQuery(CredentialEntity credentialEntity);
+    Task ResetAllUserSecurityLevelCounterAsync(string userLogin);
+    
+    Task IncrementCredentialCountBySecurityLevelAsync(CredentialEntity credentialEntity);
 
-    CqlCommand IncrementCredentialCountBySecurityLevelQuery(CredentialEntity credentialEntity);
-
-    CqlCommand DecrementCredentialCountBySecurityLevelQuery(CredentialEntity credentialEntity);
+    Task DecrementCredentialCountBySecurityLevelAsync(CredentialEntity credentialEntity);
 }

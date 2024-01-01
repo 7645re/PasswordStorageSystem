@@ -1,14 +1,12 @@
 using System.Text.RegularExpressions;
 using Domain.Enums;
-using Domain.Repositories.CredentialRepository;
 
 namespace Domain.Services.PasswordLevelCalculatorService;
 
 
-// TODO: make static
-public class PasswordLevelCalculatorService
+public static class PasswordLevelCalculatorService
 {
-    public async Task<PasswordSecurityLevel> CalculateLevelAsync(string userLogin, string password)
+    public static PasswordSecurityLevel CalculateLevel(this string password)
     {
         var score = 0;
 
@@ -33,6 +31,6 @@ public class PasswordLevelCalculatorService
         if (Regex.Match(password, "[^a-zA-Z0-9]").Success)
             score++;
 
-        return score >= 4 ? PasswordSecurityLevel.Secure : PasswordSecurityLevel.Insecure;
+        return score >= 3 ? PasswordSecurityLevel.Secure : PasswordSecurityLevel.Insecure;
     }
 }

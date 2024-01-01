@@ -37,8 +37,23 @@ public static class CredentialMapper
             ResourceName = credential.ResourceName,
             ResourceLogin = credential.ResourceLogin,
             ResourcePassword = credential.ResourcePassword,
-            PasswordSecurityLevel = credential.PasswordSecurityLevel,
+            PasswordSecurityLevel = (int)credential.PasswordSecurityLevel,
             ChangedAt = credential.ChangedAt
+        };
+    }
+
+    public static Credential ToCredential(this CredentialEntity credentialEntity)
+    {
+        return new Credential
+        {
+            UserLogin = credentialEntity.UserLogin,
+            ResourceName = credentialEntity.ResourceName,
+            ResourceLogin = credentialEntity.ResourceLogin,
+            ResourcePassword = credentialEntity.ResourcePassword,
+            CreatedAt = credentialEntity.CreatedAt,
+            ChangedAt = credentialEntity.ChangedAt,
+            PasswordSecurityLevel = (PasswordSecurityLevel)credentialEntity.PasswordSecurityLevel,
+            Id = credentialEntity.Id
         };
     }
 }

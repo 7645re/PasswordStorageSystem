@@ -28,8 +28,8 @@ public class CredentialEntity
     [Column("resource_password")]
     public string ResourcePassword { get; set; } = string.Empty;
 
-    [Column("password_security_level", Type = typeof(int))]
-    public PasswordSecurityLevel PasswordSecurityLevel { get; set; }
+    [Column("password_security_level")]
+    public int PasswordSecurityLevel { get; set; }
 
     [Column("changed_at")]
     public DateTimeOffset? ChangedAt { get; set; }

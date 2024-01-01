@@ -1,6 +1,11 @@
+using Domain.Enums;
+
 namespace Domain.DTO.Credential;
 
 public record CredentialDelete(
     string UserLogin,
     string ResourceName,
-    string ResourceLogin);
+    string ResourceLogin,
+    PasswordSecurityLevel PasswordSecurityLevel,
+    DateTimeOffset CreatedAt,
+    Guid Id);

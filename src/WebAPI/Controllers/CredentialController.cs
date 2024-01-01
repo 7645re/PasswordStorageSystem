@@ -18,39 +18,31 @@ public class CredentialController : ControllerBase
         _credentialService = credentialService;
     }
 
-    [HttpGet("passwords-security-levels")]
-    public async Task<IActionResult> GetPasswordsLevelsInfoAsync()
-    {
-        return Ok();
-    }
-
     [HttpGet]
-    public async Task<IActionResult> GetCredentialsAsync(int page)
+    public async Task<IActionResult> GetAllUserCredentialsAsync([FromQuery] int pageSize, int pageNumber)
     {
-        return Ok();
+        var result = await _credentialService.GetCredentialsAsync(User.Identity?.Name, pageSize, pageNumber);
+        return Ok(result);
     }
 
-    [HttpGet("{id}/history")]
-    public async Task<IActionResult> GetCredentialHistoryAsync(Guid id)
+    [HttpDelete("all")]
+    public async Task<IActionResult> DeleteAllUserCredentialsAsync()
     {
+        await _credentialService.DeleteUserCredentialAsync(User.Identity?.Name);
         return Ok();
     }
-
+    
     [HttpDelete]
     public async Task<IActionResult> DeleteCredentialAsync([FromBody] CredentialDeleteRequest credentialDeleteRequest)
     {
+        await _credentialService.DeleteCredentialAsync(credentialDeleteRequest.ToCredentialDelete(User.Identity?.Name));
         return Ok();
     }
 
     [HttpPost]
     public async Task<IActionResult> CreateCredentialAsync([FromBody] CredentialCreateRequest credentialCreateRequest)
     {
-        return Ok();
-    }
-
-    [HttpPatch]
-    public async Task<IActionResult> UpdateCredentialAsync([FromBody] CredentialUpdateRequest credentialUpdateRequest)
-    {
-        return Ok();
+        var result = await _credentialService.CreateCredentialAsync(credentialCreateRequest.ToCredentialCreate(User.Identity?.Name));
+        return Ok(result);
     }
 }

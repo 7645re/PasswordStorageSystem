@@ -1,6 +1,7 @@
 using System.Linq.Expressions;
 using Cassandra;
 using Cassandra.Data.Linq;
+using Cassandra.Mapping;
 using Domain.Factories;
 using Microsoft.Extensions.Logging;
 
@@ -20,24 +21,24 @@ public abstract class CassandraRepositoryBase<T> where T : class
         Table = new Table<T>(session);
         Table.CreateIfNotExists();
     }
-    
-    // constructor so that you can replace the table for tests
+
     protected CassandraRepositoryBase(Table<T> table, ILogger<CassandraRepositoryBase<T>> logger)
     {
         _logger = logger;
         Table = table;
     }
-    
+
     private void LogQueryTrace(QueryTrace? queryTrace)
     {
         if (queryTrace == null) return;
         queryTrace.Parameters.TryGetValue("query", out var query);
+        // TODO: stringBuilder
         var message = string.Join(Environment.NewLine,
             queryTrace.Events.Select(e => e.Description));
         _logger.LogInformation(query + Environment.NewLine + message);
     }
 
-    protected async Task<IEnumerable<T>> ExecuteQueryAsync(CqlQueryBase<T> query)
+    protected async Task<IEnumerable<T>> ExecuteQueryAsync(CqlQuery<T> query)
     {
         query.EnableTracing();
         var result = await query.ExecuteAsync();
@@ -45,20 +46,11 @@ public abstract class CassandraRepositoryBase<T> where T : class
         return result;
     }
 
-    protected async Task<IEnumerable<TQuery>> ExecuteQueryAsync<TQuery>(CqlQueryBase<TQuery> query)
+    protected async Task ExecuteQueryAsync(CqlUpdate query)
     {
         query.EnableTracing();
-        var result = await query.ExecuteAsync();
+        await query.ExecuteAsync();
         LogQueryTrace(query.QueryTrace);
-        return result;
-    }
-
-    protected async Task<TQuery> ExecuteScalarQueryAsync<TQuery>(CqlScalar<TQuery> query)
-    {
-        query.EnableTracing();
-        var result = await query.ExecuteAsync();
-        LogQueryTrace(query.QueryTrace);
-        return result;
     }
 
     protected async Task ExecuteQueryAsync(CqlDelete query)
@@ -67,8 +59,31 @@ public abstract class CassandraRepositoryBase<T> where T : class
         await query.ExecuteAsync();
         LogQueryTrace(query.QueryTrace);
     }
+    
+    protected async Task ExecuteQueryAsync(CqlInsert<T> query)
+    {
+        query.EnableTracing();
+        await query.ExecuteAsync();
+        LogQueryTrace(query.QueryTrace);
+    }
+    
+    protected async Task<long> ExecuteQueryAsync(CqlScalar<long> query)
+    {
+        query.EnableTracing();
+        var result = await query.ExecuteAsync();
+        LogQueryTrace(query.QueryTrace);
+        return result;
+    }
 
-    protected async Task ExecuteAsBatchAsync(IReadOnlyCollection<CqlCommand> commands)
+    protected async Task<IPage<T>> ExecuteQueryPagedAsync(CqlQuery<T> query)
+    {
+        query.EnableTracing();
+        var result = await query.ExecutePagedAsync();
+        LogQueryTrace(query.QueryTrace);
+        return result;
+    }
+
+    protected async Task ExecuteAsBatchAsync(IEnumerable<CqlCommand> commands)
     {
         var batch = Table
             .GetSession()
@@ -77,36 +92,5 @@ public abstract class CassandraRepositoryBase<T> where T : class
         await batch.ExecuteAsync();
 
         _logger.LogInformation(batch.ToString());
-    }
-
-    protected async Task AddAsync(T entity)
-    {
-        var query = Table.Insert(entity);
-        query.EnableTracing();
-        await query.ExecuteAsync();
-        LogQueryTrace(query.QueryTrace);
-    }
-
-    protected CqlCommand AddQuery(T entity)
-    {
-        var query = Table.Insert(entity);
-        query.EnableTracing();
-        return query;
-    }
-
-    protected CqlCommand DeleteQuery(Expression<Func<T, bool>> predicate)
-    {
-        var query = Table
-            .Where(predicate)
-            .Delete();
-        query.EnableTracing();
-        return query;
-    }
-
-    protected async Task UpdateAsync(CqlUpdate query)
-    {
-        query.EnableTracing();
-        await query.ExecuteAsync();
-        LogQueryTrace(query.QueryTrace);
     }
 }

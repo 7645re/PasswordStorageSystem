@@ -9,11 +9,11 @@ public class CredentialByResourceEntity
     [Column("user_login")]
     public string UserLogin { get; set; } = string.Empty;
 
-    [PartitionKey(1)]
+    [ClusteringKey(1)]
     [Column("resource_name")]
     public string ResourceName { get; set; } = string.Empty;
 
-    [PartitionKey(2)]
+    [ClusteringKey(2)]
     [Column("resource_login")]
     public string ResourceLogin { get; set; } = string.Empty;
 }

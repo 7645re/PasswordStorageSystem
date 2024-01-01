@@ -1,6 +1,10 @@
 using Domain.Factories;
 using Domain.Options;
+using Domain.Repositories.CredentialCountBySecurityLevelRepository;
+using Domain.Repositories.CredentialRepository;
+using Domain.Repositories.CredentialsByResourceRepository;
 using Domain.Repositories.UserRepository;
+using Domain.Services.CredentialService;
 using Domain.Services.TokenService;
 using Domain.Services.UserService;
 using Domain.Validators.UserValidator;
@@ -12,10 +16,15 @@ builder.Services.Configure<CassandraOptions>(builder.Configuration.GetRequiredSe
 builder.Services.Configure<JwtOptions>(builder.Configuration.GetRequiredSection("Jwt"));
 
 builder.Logging.AddConsole();
+builder.Services.AddMemoryCache();
+builder.Services.AddSingleton<ICredentialByResourceRepository, CredentialByResourceRepository>();
+builder.Services.AddSingleton<ICredentialCountBySecurityLevelRepository, CredentialCountBySecurityLevelRepository>();
+builder.Services.AddSingleton<ICredentialRepository, CredentialRepository>();
 builder.Services.AddSingleton<ICassandraSessionFactory, CassandraSessionFactory>();
 builder.Services.AddSingleton<IUserValidator, UserValidator>();
 builder.Services.AddSingleton<IUserRepository, UserRepository>();
 builder.Services.AddTransient<IUserService, UserService>();
+builder.Services.AddTransient<ICredentialService, CredentialService>();
 builder.Services.AddSingleton<ITokenService, TokenService>();
 
 builder.Services.AddControllers();
@@ -40,7 +49,10 @@ app.UseCors("AllowOrigin");
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwaggerUI(options =>
+    {
+        options.EnableTryItOutByDefault();
+    });
 }
 
 app.UseHttpsRedirection();

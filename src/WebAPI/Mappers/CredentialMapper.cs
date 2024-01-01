@@ -14,4 +14,16 @@ public static class CredentialMapper
             createRequest.ResourceLogin,
             createRequest.ResourcePassword);
     }
+
+    public static CredentialDelete ToCredentialDelete(this CredentialDeleteRequest credentialDeleteRequest,
+        string userLogin)
+    {
+        return new CredentialDelete(
+            userLogin,
+            credentialDeleteRequest.ResourceName,
+            credentialDeleteRequest.ResourceLogin,
+            credentialDeleteRequest.PasswordSecurityLevel,
+            credentialDeleteRequest.CreatedAt,
+            credentialDeleteRequest.Id);
+    }
 }
