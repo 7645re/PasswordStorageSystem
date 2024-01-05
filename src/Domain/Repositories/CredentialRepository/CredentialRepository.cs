@@ -15,27 +15,24 @@ public class CredentialRepository : CassandraRepositoryBase<CredentialEntity>, I
 {
     private readonly ICredentialCountBySecurityLevelRepository _credentialCountBySecurityLevelRepository;
     private readonly ICredentialByResourceRepository _credentialByResourceRepository;
-    private readonly IMemoryCache _memoryCache;
+    private readonly CredentialPagingStateManager _credentialPagingStateManager = new();
 
     public CredentialRepository(ICassandraSessionFactory sessionFactory,
         ILogger<CassandraRepositoryBase<CredentialEntity>> logger,
         ICredentialCountBySecurityLevelRepository credentialCountBySecurityLevelRepository,
-        ICredentialByResourceRepository credentialByResourceRepository,
-        IMemoryCache memoryCache) : base(sessionFactory, logger)
+        ICredentialByResourceRepository credentialByResourceRepository) : base(sessionFactory, logger)
     {
         _credentialCountBySecurityLevelRepository = credentialCountBySecurityLevelRepository;
         _credentialByResourceRepository = credentialByResourceRepository;
-        _memoryCache = memoryCache;
     }
 
     public CredentialRepository(Table<CredentialEntity> table,
         ILogger<CassandraRepositoryBase<CredentialEntity>> logger,
         ICredentialCountBySecurityLevelRepository credentialCountBySecurityLevelRepository,
-        ICredentialByResourceRepository credentialByResourceRepository, IMemoryCache memoryCache) : base(table, logger)
+        ICredentialByResourceRepository credentialByResourceRepository) : base(table, logger)
     {
         _credentialCountBySecurityLevelRepository = credentialCountBySecurityLevelRepository;
         _credentialByResourceRepository = credentialByResourceRepository;
-        _memoryCache = memoryCache;
     }
 
     public async Task<CredentialEntity?> TryGetCredentialAsync(CredentialEntity credentialEntity)
@@ -66,30 +63,45 @@ public class CredentialRepository : CassandraRepositoryBase<CredentialEntity>, I
         if (pageSize <= 0)
             throw new ArgumentException("Page size cannot be less or equal zero");
 
-        var previousCacheKey = $"{login}_credential_pagination_{pageSize}_{pageNumber - 1}";
-        var currentCacheKey = $"{login}_credential_pagination_{pageSize}_{pageNumber}";
+        var result = Array.Empty<CredentialEntity>();
+        var pagingStatesByPageSize = _credentialPagingStateManager.GetPagingStatesByPageSize(login, pageSize);
 
-        if (pageNumber == 1)
+        if (pagingStatesByPageSize.LastPageNumber >= pageNumber)
         {
-            var credentialsFirstPage = await ExecuteQueryPagedAsync(
-                Table
-                    .Where(r => r.UserLogin == login)
-                    .SetPageSize(pageSize));
-            _memoryCache.Set(currentCacheKey, credentialsFirstPage.PagingState);
-            return credentialsFirstPage.ToArray();
+            var pagingState = pagingStatesByPageSize.GetPagingState(pageNumber);
+            if (pagingState is null && pageNumber != 1)
+                throw new ArgumentException("Pages Out");
+            
+            return (await ExecuteQueryPagedAsync(
+                    Table
+                        .Where(r => r.UserLogin == login)
+                        .SetPageSize(pageSize)
+                        .SetPagingState(pagingState)))
+                .ToArray();
         }
 
-        _memoryCache.TryGetValue(previousCacheKey, out byte[] previousState);
-        if (previousState == null)
-            throw new InvalidOperationException("Pages can only be requested sequentially");
+        while (pagingStatesByPageSize.LastPageNumber < pageNumber + 1)
+        {
+            var pagingState = pagingStatesByPageSize
+                .GetPagingState(pagingStatesByPageSize.LastPageNumber);
+            if (pagingState is null && pagingStatesByPageSize.LastPageNumber != 1)
+                throw new ArgumentException("Pages Out");
+            
+            var credentials = await ExecuteQueryPagedAsync(
+                Table
+                    .Where(r => r.UserLogin == login)
+                    .SetPageSize(pageSize)
+                    .SetPagingState(pagingState));
 
-        var credentials = await ExecuteQueryPagedAsync(
-            Table
-                .Where(r => r.UserLogin == login)
-                .SetPageSize(pageSize)
-                .SetPagingState(previousState));
-        _memoryCache.Set(currentCacheKey, credentials.PagingState);
-        return credentials.ToArray();
+            pagingStatesByPageSize.AddLastPagingState(
+                pagingStatesByPageSize.LastPageNumber + 1,
+                credentials.PagingState);
+
+            if (pagingStatesByPageSize.LastPageNumber == pageNumber + 1)
+                result = credentials.ToArray();
+        }
+
+        return result;
     }
 
     public async Task CreateCredentialAsync(CredentialEntity credentialEntity)
@@ -110,6 +122,7 @@ public class CredentialRepository : CassandraRepositoryBase<CredentialEntity>, I
         await ExecuteAsBatchAsync(batch);
         await _credentialCountBySecurityLevelRepository
             .IncrementCredentialCountBySecurityLevelAsync(credentialEntity);
+        _credentialPagingStateManager.Clear(credentialEntity.UserLogin);
     }
 
     public async Task DeleteCredentialAsync(CredentialEntity credentialEntity)
@@ -129,6 +142,7 @@ public class CredentialRepository : CassandraRepositoryBase<CredentialEntity>, I
         });
         await _credentialCountBySecurityLevelRepository
             .DecrementCredentialCountBySecurityLevelAsync(credentialEntity);
+        _credentialPagingStateManager.Clear(credentialEntity.UserLogin);
     }
 
     public async Task DeleteCredentialsAsync(string userLogin)
