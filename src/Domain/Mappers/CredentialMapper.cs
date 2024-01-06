@@ -1,6 +1,7 @@
 using Domain.DTO.Credential;
 using Domain.Enums;
 using Domain.Models;
+using Domain.Validators.CredentialValidator;
 
 namespace Domain.Mappers;
 
@@ -15,18 +16,7 @@ public static class CredentialMapper
             ResourceLogin = credentialEntity.ResourceLogin
         };
     }
-
-    public static CredentialCountBySecurityLevelEntity ToCredentialCountBySecurityLevelEntity(
-        this CredentialEntity credentialEntity)
-    {
-        return new CredentialCountBySecurityLevelEntity
-        {
-            UserLogin = credentialEntity.UserLogin,
-            PasswordSecurityLevel = credentialEntity.PasswordSecurityLevel,
-            Count = 0
-        };
-    }
-
+    
     public static CredentialEntity ToCredentialEntity(this Credential credential)
     {
         return new CredentialEntity
@@ -54,6 +44,46 @@ public static class CredentialMapper
             ChangedAt = credentialEntity.ChangedAt,
             PasswordSecurityLevel = (PasswordSecurityLevel)credentialEntity.PasswordSecurityLevel,
             Id = credentialEntity.Id
+        };
+    }
+    
+    public static CredentialUpdated ToCredentialUpdated(this CredentialEntity credentialEntity)
+    {
+        if (credentialEntity.ChangedAt is null)
+            throw new InvalidOperationException("After updating the credential, the " +
+                                                "time of the change was not specified");
+        return new CredentialUpdated(
+            credentialEntity.ResourcePassword,
+            (DateTimeOffset)credentialEntity.ChangedAt,
+            (PasswordSecurityLevel)credentialEntity.PasswordSecurityLevel);
+    }
+    
+    public static CredentialEntity ToCredentialEntity(this CredentialDelete credentialDelete)
+    {
+        return new CredentialEntity
+        {
+            UserLogin = credentialDelete.UserLogin,
+            ResourceName = credentialDelete.ResourceName,
+            ResourceLogin = credentialDelete.ResourceLogin,
+            CreatedAt = credentialDelete.CreatedAt,
+            PasswordSecurityLevel = (int)credentialDelete.PasswordSecurityLevel,
+            Id = credentialDelete.Id
+        };
+    }
+    
+    public static CredentialEntity ToCredentialEntity(
+        this CredentialUpdate credentialUpdate,
+        DateTimeOffset changedAt,
+        PasswordSecurityLevel passwordSecurityLevel)
+    {
+        return new CredentialEntity
+        {
+            UserLogin = credentialUpdate.UserLogin,
+            CreatedAt = credentialUpdate.CreatedAt,
+            ResourcePassword = credentialUpdate.NewPassword,
+            ChangedAt = changedAt,
+            PasswordSecurityLevel = (int)passwordSecurityLevel,
+            Id = credentialUpdate.Id
         };
     }
 }

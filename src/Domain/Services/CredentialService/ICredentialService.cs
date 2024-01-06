@@ -8,4 +8,5 @@ public interface ICredentialService
     Task DeleteCredentialAsync(CredentialDelete credentialDelete);
     Task DeleteUserCredentialAsync(string userLogin);
     Task<Credential[]> GetCredentialsAsync(string userLogin, int pageSize, int pageNumber);
+    Task<CredentialUpdated> ChangeCredentialPasswordAsync(CredentialUpdate credentialUpdate);
 }

@@ -1,3 +1,6 @@
 namespace WebAPI.DTO.Request;
 
-public record CredentialUpdateRequest(string ResourceName, string ResourceLogin, string NewResourcePassword);
+public record CredentialUpdateRequest(
+    DateTimeOffset CreatedAt,
+    Guid Id,
+    string NewPassword);

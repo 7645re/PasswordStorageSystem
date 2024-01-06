@@ -22,12 +22,6 @@ public abstract class CassandraRepositoryBase<T> where T : class
         Table.CreateIfNotExists();
     }
 
-    protected CassandraRepositoryBase(Table<T> table, ILogger<CassandraRepositoryBase<T>> logger)
-    {
-        _logger = logger;
-        Table = table;
-    }
-
     private void LogQueryTrace(QueryTrace? queryTrace)
     {
         if (queryTrace == null) return;

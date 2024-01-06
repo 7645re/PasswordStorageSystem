@@ -6,16 +6,10 @@ using Microsoft.Extensions.Logging;
 
 namespace Domain.Repositories.CredentialCountBySecurityLevelRepository;
 
-public class CredentialCountBySecurityLevelRepository : CassandraRepositoryBase<CredentialCountBySecurityLevelEntity>,
-    ICredentialCountBySecurityLevelRepository
+public class CredentialCountBySecurityLevelRepository : CassandraRepositoryBase<CredentialCountBySecurityLevelEntity>, ICredentialCountBySecurityLevelRepository
 {
     public CredentialCountBySecurityLevelRepository(ICassandraSessionFactory sessionFactory,
         ILogger<CassandraRepositoryBase<CredentialCountBySecurityLevelEntity>> logger) : base(sessionFactory, logger)
-    {
-    }
-
-    public CredentialCountBySecurityLevelRepository(Table<CredentialCountBySecurityLevelEntity> table,
-        ILogger<CassandraRepositoryBase<CredentialCountBySecurityLevelEntity>> logger) : base(table, logger)
     {
     }
 
@@ -65,21 +59,31 @@ public class CredentialCountBySecurityLevelRepository : CassandraRepositoryBase<
 
     public async Task IncrementCredentialCountBySecurityLevelAsync(CredentialEntity credentialEntity)
     {
-        await ExecuteQueryAsync(Table
+        await ExecuteQueryAsync(IncrementCredentialCountBySecurityLevelQuery(credentialEntity));
+    }
+    
+    public CqlUpdate IncrementCredentialCountBySecurityLevelQuery(CredentialEntity credentialEntity)
+    {
+        return Table
             .Where(e =>
                 e.UserLogin == credentialEntity.UserLogin
                 && e.PasswordSecurityLevel == credentialEntity.PasswordSecurityLevel)
             .Select(c => new {Count = 1L})
-            .Update());
+            .Update();
     }
 
     public async Task DecrementCredentialCountBySecurityLevelAsync(CredentialEntity credentialEntity)
     {
-        await ExecuteQueryAsync(Table
+        await ExecuteQueryAsync(DecrementCredentialCountBySecurityLevelQuery(credentialEntity));
+    }
+    
+    public CqlUpdate DecrementCredentialCountBySecurityLevelQuery(CredentialEntity credentialEntity)
+    {
+        return Table
             .Where(e =>
                 e.UserLogin == credentialEntity.UserLogin
                 && e.PasswordSecurityLevel == credentialEntity.PasswordSecurityLevel)
             .Select(c => new {Count = -1L})
-            .Update());
+            .Update();
     }
 }

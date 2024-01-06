@@ -1,4 +1,14 @@
 using System.Text;
+using Domain.Factories;
+using Domain.Repositories.CredentialCountBySecurityLevelRepository;
+using Domain.Repositories.CredentialRepository;
+using Domain.Repositories.CredentialsByResourceRepository;
+using Domain.Repositories.UserRepository;
+using Domain.Services.CredentialService;
+using Domain.Services.TokenService;
+using Domain.Services.UserService;
+using Domain.Validators.CredentialValidator;
+using Domain.Validators.UserValidator;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
@@ -10,7 +20,8 @@ namespace WebAPI.Extensions;
 
 public static class ServiceCollectionExtensions
 {
-    public static IServiceCollection AddControllersWithErrorBehavior(this IServiceCollection services)
+    public static IServiceCollection AddControllersWithErrorBehavior(
+        this IServiceCollection services)
     {
         services
             .AddControllers(
@@ -40,6 +51,50 @@ public static class ServiceCollectionExtensions
         });
 
         return services;
+    }
+
+    public static IServiceCollection AddServices(this IServiceCollection services)
+    {
+        services.AddTransient<IUserService, UserService>();
+        services.AddTransient<ICredentialService, CredentialService>();
+        services.AddSingleton<ITokenService, TokenService>();
+        return services;
+    }
+
+    public static IServiceCollection AddFactories(this IServiceCollection services)
+    {
+        services.AddSingleton<ICassandraSessionFactory, CassandraSessionFactory>();
+        return services;
+    }
+
+    public static IServiceCollection AddRepositories(this IServiceCollection services)
+    {
+        services.AddSingleton<IUserRepository, UserRepository>();
+        services.AddSingleton<ICredentialByResourceRepository, CredentialByResourceRepository>();
+        services.AddSingleton<ICredentialCountBySecurityLevelRepository, CredentialCountBySecurityLevelRepository>();
+        services.AddSingleton<ICredentialRepository, CredentialRepository>();
+        return services;
+    }
+
+    public static IServiceCollection AddValidators(this IServiceCollection services)
+    {
+        services.AddSingleton<ICredentialValidator, CredentialValidator>();
+        services.AddSingleton<IUserValidator, UserValidator>();
+        return services;
+    }
+
+    public static IServiceCollection AddCORS(this IServiceCollection services)
+    {
+        return services.AddCors(options =>
+        {
+            options.AddPolicy("AllowOrigin", policyBuilder =>
+            {
+                policyBuilder.WithOrigins("http://localhost:3000")
+                    .AllowAnyHeader()
+                    .AllowAnyMethod()
+                    .WithExposedHeaders("www-authenticate");
+            });
+        });
     }
 
     public static IServiceCollection AddSwagger(this IServiceCollection services)

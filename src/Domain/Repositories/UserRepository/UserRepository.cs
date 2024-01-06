@@ -22,14 +22,6 @@ public class UserRepository : CassandraRepositoryBase<UserEntity>, IUserReposito
         _credentialRepository = credentialRepository;
     }
 
-    public UserRepository(Table<UserEntity> table, ILogger<UserRepository> logger,
-        ICredentialCountBySecurityLevelRepository credentialCountBySecurityLevelRepository,
-        ICredentialRepository credentialRepository) : base(table, logger)
-    {
-        _credentialCountBySecurityLevelRepository = credentialCountBySecurityLevelRepository;
-        _credentialRepository = credentialRepository;
-    }
-
     public async Task<UserEntity> GetUserAsync(string login)
     {
         var user = await TryGetUserAsync(login);
@@ -47,7 +39,13 @@ public class UserRepository : CassandraRepositoryBase<UserEntity>, IUserReposito
     public async Task DeleteUserAsync(string login)
     {
         await GetUserAsync(login);
-        await ExecuteQueryAsync(Table.Where(r => r.Login == login).Delete());
+
+        var batch = new List<CqlCommand>
+        {
+            Table.Where(r => r.Login == login).Delete()
+        };
+        batch.AddRange(_credentialRepository.DeleteUserCredentialsWithDependenciesQueries(login));
+        await ExecuteAsBatchAsync(batch);
     }
 
     public async Task CreateUserAsync(UserEntity userEntity)

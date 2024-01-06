@@ -26,4 +26,14 @@ public static class CredentialMapper
             credentialDeleteRequest.CreatedAt,
             credentialDeleteRequest.Id);
     }
+    
+    public static CredentialUpdate ToCredentialUpdate(this CredentialUpdateRequest credentialUpdateRequest,
+        string userLogin)
+    {
+        return new CredentialUpdate(
+            userLogin,
+            credentialUpdateRequest.CreatedAt,
+            credentialUpdateRequest.Id,
+            credentialUpdateRequest.NewPassword);
+    }
 }

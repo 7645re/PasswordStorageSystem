@@ -1,15 +1,15 @@
 using System.Text.RegularExpressions;
 using Domain.Enums;
 
-namespace Domain.Services.PasswordLevelCalculatorService;
+namespace Domain.Calculators;
 
-
-public static class PasswordLevelCalculatorService
+public static class PasswordLevelCalculator
 {
     public static PasswordSecurityLevel CalculateLevel(this string password)
     {
         var score = 0;
 
+        // TODO: can use the Rule pattern
         switch (password.Length)
         {
             case < 6:
