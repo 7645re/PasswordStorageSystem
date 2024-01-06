@@ -1,6 +1,5 @@
 using Cassandra.Mapping;
 using Cassandra.Mapping.Attributes;
-using Domain.Enums;
 
 namespace Domain.Models;
 

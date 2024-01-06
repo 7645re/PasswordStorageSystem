@@ -1,4 +1,3 @@
-using Domain.DTO;
 using Domain.DTO.User;
 using WebAPI.DTO.Request;
 

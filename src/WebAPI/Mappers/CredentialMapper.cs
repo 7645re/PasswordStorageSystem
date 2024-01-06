@@ -1,5 +1,4 @@
 using Domain.DTO.Credential;
-using Domain.Enums;
 using WebAPI.DTO.Request;
 
 namespace WebAPI.Mappers;

@@ -1,7 +1,6 @@
 using Domain.DTO.Credential;
 using Domain.Enums;
 using Domain.Models;
-using Domain.Validators.CredentialValidator;
 
 namespace Domain.Mappers;
 

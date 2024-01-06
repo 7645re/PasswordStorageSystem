@@ -1,10 +1,10 @@
-namespace WebAPI.Controllers;
-
 using Domain.Services.CredentialService;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WebAPI.DTO.Request;
 using WebAPI.Mappers;
+
+namespace WebAPI.Controllers;
 
 [ApiController]
 [Authorize]

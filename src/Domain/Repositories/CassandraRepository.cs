@@ -1,4 +1,3 @@
-using System.Linq.Expressions;
 using Cassandra;
 using Cassandra.Data.Linq;
 using Cassandra.Mapping;

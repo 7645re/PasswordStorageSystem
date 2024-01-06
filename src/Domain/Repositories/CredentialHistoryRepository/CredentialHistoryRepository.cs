@@ -1,4 +1,3 @@
-using Cassandra.Data.Linq;
 using Domain.Factories;
 using Domain.Models;
 using Microsoft.Extensions.Logging;
