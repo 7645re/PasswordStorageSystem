@@ -1,6 +1,7 @@
 using System.Text;
 using Domain.Factories;
 using Domain.Repositories.CredentialCountBySecurityLevelRepository;
+using Domain.Repositories.CredentialHistoryRepository;
 using Domain.Repositories.CredentialRepository;
 using Domain.Repositories.CredentialsByResourceRepository;
 using Domain.Repositories.UserRepository;
@@ -69,10 +70,11 @@ public static class ServiceCollectionExtensions
 
     public static IServiceCollection AddRepositories(this IServiceCollection services)
     {
-        services.AddSingleton<IUserRepository, UserRepository>();
         services.AddSingleton<ICredentialByResourceRepository, CredentialByResourceRepository>();
+        services.AddSingleton<ICredentialHistoryRepository, CredentialHistoryRepository>();
         services.AddSingleton<ICredentialCountBySecurityLevelRepository, CredentialCountBySecurityLevelRepository>();
         services.AddSingleton<ICredentialRepository, CredentialRepository>();
+        services.AddSingleton<IUserRepository, UserRepository>();
         return services;
     }
 

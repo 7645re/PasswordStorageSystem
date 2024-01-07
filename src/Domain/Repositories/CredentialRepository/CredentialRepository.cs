@@ -3,6 +3,7 @@ using Domain.Factories;
 using Domain.Mappers;
 using Domain.Models;
 using Domain.Repositories.CredentialCountBySecurityLevelRepository;
+using Domain.Repositories.CredentialHistoryRepository;
 using Domain.Repositories.CredentialsByResourceRepository;
 using Microsoft.Extensions.Logging;
 
@@ -10,17 +11,22 @@ namespace Domain.Repositories.CredentialRepository;
 
 public class CredentialRepository : CassandraRepositoryBase<CredentialEntity>, ICredentialRepository
 {
-    private readonly ICredentialCountBySecurityLevelRepository _credentialCountBySecurityLevelRepository;
+    private readonly ICredentialCountBySecurityLevelRepository
+        _credentialCountBySecurityLevelRepository;
+
     private readonly ICredentialByResourceRepository _credentialByResourceRepository;
+    private readonly ICredentialHistoryRepository _credentialHistoryRepository;
     private readonly CredentialPagingStateManager _credentialPagingStateManager = new();
 
     public CredentialRepository(ICassandraSessionFactory sessionFactory,
         ILogger<CassandraRepositoryBase<CredentialEntity>> logger,
         ICredentialCountBySecurityLevelRepository credentialCountBySecurityLevelRepository,
-        ICredentialByResourceRepository credentialByResourceRepository) : base(sessionFactory, logger)
+        ICredentialByResourceRepository credentialByResourceRepository,
+        ICredentialHistoryRepository credentialHistoryRepository) : base(sessionFactory, logger)
     {
         _credentialCountBySecurityLevelRepository = credentialCountBySecurityLevelRepository;
         _credentialByResourceRepository = credentialByResourceRepository;
+        _credentialHistoryRepository = credentialHistoryRepository;
     }
 
     public async Task<CredentialEntity?> TryGetCredentialAsync(
@@ -128,19 +134,25 @@ public class CredentialRepository : CassandraRepositoryBase<CredentialEntity>, I
     {
         var oldCredentialEntity = await GetCredentialAsync(newCredentialEntity);
         if (oldCredentialEntity.ResourcePassword == newCredentialEntity.ResourcePassword)
-            throw new Exception("Credential state hasn't changed in any way, so it can't be updated");
+            throw new Exception(
+                "Credential state hasn't changed in any way, so it can't be updated");
 
-        await ExecuteQueryAsync(Table
-            .Where(r => r.UserLogin == newCredentialEntity.UserLogin &&
-                        r.CreatedAt == newCredentialEntity.CreatedAt &&
-                        r.Id == newCredentialEntity.Id)
-            .Select(r => new CredentialEntity
-            {
-                ResourcePassword = newCredentialEntity.ResourcePassword,
-                ChangedAt = newCredentialEntity.ChangedAt,
-                PasswordSecurityLevel = newCredentialEntity.PasswordSecurityLevel
-            })
-            .Update());
+        var batch = new[]
+        {
+            Table
+                .Where(r => r.UserLogin == newCredentialEntity.UserLogin &&
+                            r.CreatedAt == newCredentialEntity.CreatedAt &&
+                            r.Id == newCredentialEntity.Id)
+                .Select(r => new CredentialEntity
+                {
+                    ResourcePassword = newCredentialEntity.ResourcePassword,
+                    ChangedAt = newCredentialEntity.ChangedAt,
+                    PasswordSecurityLevel = newCredentialEntity.PasswordSecurityLevel
+                })
+                .Update(),
+            _credentialHistoryRepository.CreateCredentialHistoryItemQuery(newCredentialEntity)
+        };
+        await ExecuteAsBatchAsync(batch);
 
         if (oldCredentialEntity.PasswordSecurityLevel != newCredentialEntity.PasswordSecurityLevel)
         {
@@ -169,7 +181,8 @@ public class CredentialRepository : CassandraRepositoryBase<CredentialEntity>, I
                     && e.CreatedAt == credentialEntity.CreatedAt
                     && e.Id == credentialEntity.Id)
                 .Delete(),
-            _credentialByResourceRepository.DeleteCredentialByResourceQuery(credentialEntity)
+            _credentialByResourceRepository.DeleteCredentialByResourceQuery(credentialEntity),
+            _credentialHistoryRepository.DeleteCredentialHistoriesItemsQuery(credentialEntity.Id)
         });
         await _credentialCountBySecurityLevelRepository
             .DecrementCredentialCountBySecurityLevelAsync(credentialEntity);
@@ -183,19 +196,27 @@ public class CredentialRepository : CassandraRepositoryBase<CredentialEntity>, I
             .Delete();
     }
 
-    public IEnumerable<CqlCommand> DeleteUserCredentialsWithDependenciesQueries(string userLogin)
+    public async Task<IEnumerable<CqlCommand>> DeleteUserCredentialsWithDependenciesQueriesAsync(
+        string userLogin)
     {
+        var allUserCredentials = await ExecuteQueryAsync(Table
+            .Where(e => e.UserLogin == userLogin)
+            .Select(e => e.Id));
+
         return new[]
         {
             DeleteUserCredentialsQuery(userLogin),
-            _credentialByResourceRepository.DeleteCredentialsByResourceQuery(userLogin)
+            _credentialByResourceRepository.DeleteCredentialsByResourceQuery(userLogin),
+            _credentialHistoryRepository.DeleteCredentialsHistoriesItemsQuery(allUserCredentials)
         };
     }
 
     public async Task DeleteCredentialsAsync(string userLogin)
     {
-        await ExecuteAsBatchAsync(DeleteUserCredentialsWithDependenciesQueries(userLogin));
-        await _credentialCountBySecurityLevelRepository.ResetAllUserSecurityLevelCounterAsync(userLogin);
+        var batch = await DeleteUserCredentialsWithDependenciesQueriesAsync(userLogin);
+        await ExecuteAsBatchAsync(batch);
+        await _credentialCountBySecurityLevelRepository.ResetAllUserSecurityLevelCounterAsync(
+            userLogin);
         _credentialPagingStateManager.Clear(userLogin);
     }
 }

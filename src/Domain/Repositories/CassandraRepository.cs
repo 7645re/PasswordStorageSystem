@@ -39,6 +39,15 @@ public abstract class CassandraRepositoryBase<T> where T : class
         return result;
     }
 
+    
+    protected async Task<IEnumerable<T>> ExecuteQueryAsync<T>(CqlQuery<T> query)
+    {
+        query.EnableTracing();
+        var result = await query.ExecuteAsync();
+        LogQueryTrace(query.QueryTrace);
+        return result;
+    }
+    
     protected async Task ExecuteQueryAsync(CqlUpdate query)
     {
         query.EnableTracing();

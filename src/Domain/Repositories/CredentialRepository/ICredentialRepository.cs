@@ -10,7 +10,7 @@ public interface ICredentialRepository
     Task DeleteCredentialAsync(CredentialEntity credentialEntity);
     Task DeleteCredentialsAsync(string userLogin);
     Task UpdateCredentialAsync(CredentialEntity newCredentialEntity);
-    IEnumerable<CqlCommand> DeleteUserCredentialsWithDependenciesQueries(string userLogin);
+    Task<IEnumerable<CqlCommand>> DeleteUserCredentialsWithDependenciesQueriesAsync(string userLogin);
     Task<CredentialEntity?> TryGetCredentialAsync(
         string userLogin,
         DateTimeOffset createdAt,

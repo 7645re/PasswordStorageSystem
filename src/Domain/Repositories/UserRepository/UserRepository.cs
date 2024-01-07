@@ -10,7 +10,9 @@ namespace Domain.Repositories.UserRepository;
 
 public class UserRepository : CassandraRepositoryBase<UserEntity>, IUserRepository
 {
-    private readonly ICredentialCountBySecurityLevelRepository _credentialCountBySecurityLevelRepository;
+    private readonly ICredentialCountBySecurityLevelRepository
+        _credentialCountBySecurityLevelRepository;
+
     private readonly ICredentialRepository _credentialRepository;
 
     public UserRepository(ICassandraSessionFactory sessionFactory, ILogger<UserRepository> logger,
@@ -44,7 +46,9 @@ public class UserRepository : CassandraRepositoryBase<UserEntity>, IUserReposito
         {
             Table.Where(r => r.Login == login).Delete()
         };
-        batch.AddRange(_credentialRepository.DeleteUserCredentialsWithDependenciesQueries(login));
+        var credBatch =
+            await _credentialRepository.DeleteUserCredentialsWithDependenciesQueriesAsync(login);
+        batch.AddRange(credBatch);
         await ExecuteAsBatchAsync(batch);
     }
 
@@ -54,7 +58,8 @@ public class UserRepository : CassandraRepositoryBase<UserEntity>, IUserReposito
         if (userEntityExist is not null) throw new Exception($"User already exist");
 
         await ExecuteQueryAsync(Table.Insert(userEntity));
-        await _credentialCountBySecurityLevelRepository.CreateCountersForEachSecurityLevelAsync(userEntity.Login);
+        await _credentialCountBySecurityLevelRepository.CreateCountersForEachSecurityLevelAsync(
+            userEntity.Login);
     }
 
     public async Task ChangePasswordAsync(string login, string newPassword)
