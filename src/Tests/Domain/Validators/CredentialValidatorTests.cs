@@ -180,9 +180,8 @@ public class CredentialValidatorTests
             string.Empty,
             DateTimeOffset.Now,
             Guid.Empty,
-            "123");
-
-
+            "12345");
+        
         // Act
         _credentialValidator.ValidateCredentialUpdate(credential);
     }
