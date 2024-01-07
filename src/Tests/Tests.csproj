@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net7.0</TargetFramework>
+        <TargetFramework>net6.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
 
@@ -11,6 +11,7 @@
 
     <ItemGroup>
         <PackageReference Include="CassandraCSharpDriver" Version="3.19.5" />
+        <PackageReference Include="LiquidTestReports.Markdown" Version="1.0.9" />
         <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.6.0" />
         <PackageReference Include="Moq" Version="4.20.70" />
         <PackageReference Include="NUnit" Version="3.13.3" />
@@ -25,7 +26,11 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="Domain" />
+      <Folder Include="TestResults" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Remove="TestResults\TestReport_20240107052335.md" />
     </ItemGroup>
 
 </Project>

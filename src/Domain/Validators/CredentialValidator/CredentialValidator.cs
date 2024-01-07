@@ -24,7 +24,7 @@ public class CredentialValidator : ICredentialValidator
     {
         if (resourcePassword.Length < _resourcePasswordLengthRange.Min ||
             resourcePassword.Length > _resourcePasswordLengthRange.Max)
-            throw new Exception(
+            throw new ArgumentException(
                 "Credential resource password length is not within the valid range");
     }
 
@@ -32,14 +32,14 @@ public class CredentialValidator : ICredentialValidator
     {
         if (resourceLogin.Length < _resourceLoginLengthRange.Min ||
             resourceLogin.Length > _resourceLoginLengthRange.Max)
-            throw new Exception("Credential resource login length is not within the valid range");
+            throw new ArgumentException("Credential resource login length is not within the valid range");
     }
 
     private void ValidateResourceName(string resourceName)
     {
         if (resourceName.Length < _resourceNameLengthRange.Min ||
             resourceName.Length > _resourceNameLengthRange.Max)
-            throw new Exception(
+            throw new ArgumentException(
                 "Credential resource password length is not within the valid range");
     }
 }
