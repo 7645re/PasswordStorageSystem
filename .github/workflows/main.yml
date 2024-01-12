@@ -61,7 +61,7 @@ jobs:
 
   integration_tests:
     runs-on: ubuntu-latest
-    needs: build  # Ensure the build job completes before starting integration tests
+    needs: build
 
     steps:
     - uses: actions/checkout@v2
@@ -75,11 +75,11 @@ jobs:
       run: dotnet restore
 
     - name: Run Integration Tests
-      run: dotnet test path/to/IntegrationTests.csproj --no-restore --no-build --configuration $config
+      run: dotnet src/IntegrationTests/IntegrationTests.csproj --no-restore --no-build --configuration $config
 
     - name: Upload Integration Test Results
       uses: actions/upload-artifact@v2
       if: ${{always()}}
       with:
         name: 'Integration Test Run'
-        path: path/to/TestResults  # Adjust the path to the actual location of your integration test results
+        path: src/IntegrationTests/TestResults
