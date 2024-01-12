@@ -28,18 +28,22 @@ public class TokenService : ITokenService
             new Claim(ClaimTypes.Name, userLogin)
         };
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+        var expire = DateTime.UtcNow.AddHours(_jwtOptions.AccessTokenExpireHours);
+        
+        var expireWithoutMilSecAndMacroSec = expire
+            .AddMilliseconds(-1 * expire.Millisecond);
+
         var token = new JwtSecurityToken(
             _jwtOptions.Issuer,
             _jwtOptions.Audience,
             claims,
-            expires: DateTime.Now.AddHours(_jwtOptions.AccessTokenExpireHours),
+            expires: expireWithoutMilSecAndMacroSec,
             signingCredentials: credentials
         );
 
         var tokenValue = new JwtSecurityTokenHandler().WriteToken(token);
-        var expire = DateTimeOffset.UtcNow.AddHours(_jwtOptions.AccessTokenExpireHours);
         _logger.LogInformation($"New JWT access token was generated for the user {userLogin}");
 
-        return new TokenInfo(tokenValue, expire);
+        return new TokenInfo(tokenValue, expireWithoutMilSecAndMacroSec);
     }
 }

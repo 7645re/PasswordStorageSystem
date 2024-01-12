@@ -19,7 +19,7 @@ public class CredentialController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetAllUserCredentialsAsync(
+    public async Task<IActionResult> GetUserCredentialsByPageAsync(
         [FromQuery] int pageSize, int pageNumber)
     {
         var result = await _credentialService.GetCredentialsAsync(

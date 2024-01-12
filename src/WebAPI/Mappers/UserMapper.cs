@@ -1,5 +1,7 @@
 using Domain.DTO.User;
+using Domain.Models;
 using WebAPI.DTO.Request;
+using WebAPI.DTO.Response;
 
 namespace WebAPI.Mappers;
 
@@ -18,5 +20,16 @@ public static class UserMapper
     public static UserLogIn ToUserLogIn(this UserLogInRequest userLogInRequest)
     {
         return new UserLogIn(userLogInRequest.Login, userLogInRequest.Password);
+    }
+
+    public static UserResponse ToUserResponse(this User user)
+    {
+        return new UserResponse
+        {
+            Login = user.Login,
+            Password = user.Password,
+            Token = user.Token,
+            TokenExpire = user.TokenExpire
+        };
     }
 }

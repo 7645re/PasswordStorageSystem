@@ -22,7 +22,7 @@ public class UserController : ControllerBase
     public async Task<IActionResult> LogInAsync([FromBody] UserLogInRequest userLogInRequest)
     {
         var result = await _userService.GetUserTokenAsync(userLogInRequest.ToUserLogIn());
-        return Ok(result);
+        return Ok(result.ToTokenInfoResponse());
     }
 
     [AllowAnonymous]
@@ -30,7 +30,7 @@ public class UserController : ControllerBase
     public async Task<IActionResult> RegisterAsync([FromBody] UserRegisterRequest userRegisterRequest)
     {
         var result = await _userService.CreateUserAsync(userRegisterRequest.ToUserCreate());
-        return Ok(result);
+        return Ok(result.ToTokenInfoResponse());
     }
 
     [Authorize]
@@ -38,7 +38,7 @@ public class UserController : ControllerBase
     public async Task<IActionResult> GetUserAsync()
     {
         var result = await _userService.GetUserAsync(User.Identity.Name);
-        return Ok(result);
+        return Ok(result.ToUserResponse());
     }
 
     [Authorize]

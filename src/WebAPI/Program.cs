@@ -2,12 +2,13 @@ using Domain.Options;
 using WebAPI.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Configuration
+    .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: false, reloadOnChange: true);
 
 builder.Services.Configure<CassandraOptions>(builder.Configuration.GetRequiredSection("Cassandra"));
 builder.Services.Configure<JwtOptions>(builder.Configuration.GetRequiredSection("Jwt"));
 
 builder.Logging.AddConsole();
-builder.Services.AddMemoryCache();
 builder.Services.AddValidators();
 builder.Services.AddRepositories();
 builder.Services.AddFactories();
@@ -37,3 +38,5 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
+public partial class Program { }

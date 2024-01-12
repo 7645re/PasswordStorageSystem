@@ -4,6 +4,7 @@ using NUnit.Framework;
 
 namespace Tests.Domain.Validators;
 
+[TestFixture]
 public class CredentialValidatorTests
 {
     private ICredentialValidator _credentialValidator = null!;
