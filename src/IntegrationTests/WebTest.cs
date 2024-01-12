@@ -19,25 +19,30 @@ public abstract class WebTest : IClassFixture<IntegrationTestWebApplicationFacto
             .CreateClient()
             .PostAsync($"/user/register", Serialize(request));
     }
-    
+
     protected Task<HttpResponseMessage> GetUser(string token)
     {
-        var client = _factory
-            .CreateClient();
-        client.DefaultRequestHeaders.Add("Authorization", "Bearer " + token);
-        return client
+        return _factory
+            .CreateClient()
+            .WithBearerToken(token)
             .GetAsync("/user");
     }
 
-    protected Task<HttpResponseMessage> LogInUser(object request, string token)
+    protected Task<HttpResponseMessage> ChangeUserPassword(object body, string token)
     {
-        var client = _factory
-            .CreateClient();
-        client.DefaultRequestHeaders.Add("Authorization", token);
-        return client
+        return _factory
+            .CreateClient()
+            .WithBearerToken(token)
+            .PatchAsync("/user/password", Serialize(body));
+    }
+
+    protected Task<HttpResponseMessage> LogInUser(object request)
+    {
+        return _factory
+            .CreateClient()
             .PostAsync($"/user/login", Serialize(request));
     }
-    
+
     private StringContent Serialize(object source)
     {
         var json = JsonSerializer.Serialize(source);

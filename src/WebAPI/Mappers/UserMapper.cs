@@ -12,9 +12,11 @@ public static class UserMapper
         return new UserCreate(userRegisterRequest.Login, userRegisterRequest.Password);
     }
 
-    public static UserUpdate ToUserChangePassword(this UserChangePasswordRequest userChangePasswordRequest)
+    public static UserUpdate ToUserChangePassword(
+        this UserChangePasswordRequest userChangePasswordRequest,
+        string login)
     {
-        return new UserUpdate(userChangePasswordRequest.Login, userChangePasswordRequest.NewPassword);
+        return new UserUpdate(login, userChangePasswordRequest.NewPassword);
     }
 
     public static UserLogIn ToUserLogIn(this UserLogInRequest userLogInRequest)

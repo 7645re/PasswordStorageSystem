@@ -1,5 +1,4 @@
 using System.Net;
-using System.Text.Json;
 using WebAPI.DTO.Response;
 using Xunit;
 
@@ -25,14 +24,12 @@ public class UserControllerTests : WebTest
         var registerUserResponse = await RegisterUser(body);
 
         // Assert
-        var registerUserResponseString = await registerUserResponse.Content.ReadAsStringAsync();
-        var deserializedRegisterUserResponseString =
-            JsonSerializer.Deserialize<TokenInfoResponse>(registerUserResponseString);
-        Assert.NotNull(deserializedRegisterUserResponseString);
-        var getUserResponse = await GetUser(deserializedRegisterUserResponseString.Token);
+        var desResponse = await registerUserResponse.DeserializeToAsync<TokenInfoResponse>();
+        Assert.NotNull(desResponse);
+        var getUserResponse = await GetUser(desResponse.Token);
         Assert.Equivalent(HttpStatusCode.OK, getUserResponse.StatusCode);
     }
-    
+
     [Fact]
     public async Task GetUser_UserExist_ReturnExistUser()
     {
@@ -45,20 +42,63 @@ public class UserControllerTests : WebTest
 
         // Act
         var registerUserResponse = await RegisterUser(body);
-        var registerUserResponseString = await registerUserResponse
-            .Content
-            .ReadAsStringAsync();
-        var deserializedRegisterUserResponseString =
-            JsonSerializer.Deserialize<TokenInfoResponse>(registerUserResponseString);
-        var getUserResponse = await GetUser(deserializedRegisterUserResponseString!.Token);
-        var getUserResponseString = await getUserResponse.Content.ReadAsStringAsync();
-        var deserializedGetUserResponseString = JsonSerializer.Deserialize<UserResponse>(getUserResponseString);
+        var desRegisterUserResponse = await registerUserResponse.DeserializeToAsync<TokenInfoResponse>();
+        var getUserResponse = await GetUser(desRegisterUserResponse!.Token);
+        var desGetUserResponse = await getUserResponse.DeserializeToAsync<UserResponse>();
 
         // Assert
         Assert.Equivalent(HttpStatusCode.OK, getUserResponse.StatusCode);
-        Assert.Equal(body.Login, deserializedGetUserResponseString.Login);
-        Assert.Equal(body.Password, deserializedGetUserResponseString.Password);
-        Assert.Equal(deserializedRegisterUserResponseString.Token, deserializedGetUserResponseString.Token);
-        Assert.Equal(deserializedRegisterUserResponseString.Expire, deserializedGetUserResponseString.TokenExpire);
+        Assert.Equal(body.Login, desGetUserResponse.Login);
+        Assert.Equal(body.Password, desGetUserResponse.Password);
+        Assert.Equal(desRegisterUserResponse.Token, desGetUserResponse.Token);
+        Assert.Equal(desRegisterUserResponse.Expire, desGetUserResponse.TokenExpire);
+    }
+
+    [Fact]
+    public async Task LogIn_UserExist_ReturnValidToken()
+    {
+        // Arrange
+        var body = new
+        {
+            Login = "login3",
+            Password = "password"
+        };
+
+        // Act
+        var registerUserResponse = await RegisterUser(body);
+        var desRegisterUserResponse = await registerUserResponse.DeserializeToAsync<TokenInfoResponse>();
+        var logInUserResponse = await LogInUser(body);
+        var desLogInUserResponse = await logInUserResponse.DeserializeToAsync<TokenInfoResponse>();
+
+        // Assert
+        Assert.Equivalent(HttpStatusCode.OK, logInUserResponse.StatusCode);
+        Assert.Equal(desRegisterUserResponse!.Token, desLogInUserResponse!.Token);
+        Assert.Equal(desRegisterUserResponse.Expire, desLogInUserResponse.Expire);
+    }
+
+    [Fact]
+    public async Task ChangePassword_UserExist_GerUserWithNewPassword()
+    {
+        // Arrange
+        var registerUserBody = new
+        {
+            Login = "login4",
+            Password = "password"
+        };
+        var changePasswordBody = new
+        {
+            NewPassword = "NewPassword"
+        };
+
+
+        // Act
+        var registerUserResponse = await RegisterUser(registerUserBody);
+        var desRegisterUserResponse = await registerUserResponse.DeserializeToAsync<TokenInfoResponse>();
+        await ChangeUserPassword(changePasswordBody, desRegisterUserResponse.Token);
+
+        // Assert
+        var getUserResponse = await GetUser(desRegisterUserResponse.Token);
+        var desGetUserResponse = await getUserResponse.DeserializeToAsync<UserResponse>();
+        Assert.Equal(changePasswordBody.NewPassword, desGetUserResponse.Password);
     }
 }

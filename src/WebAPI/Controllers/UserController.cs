@@ -54,7 +54,7 @@ public class UserController : ControllerBase
     public async Task<IActionResult> ChangeUserPasswordAsync(
         [FromBody] UserChangePasswordRequest userChangePasswordRequest)
     {
-        await _userService.ChangePasswordAsync(userChangePasswordRequest.ToUserChangePassword());
+        await _userService.ChangePasswordAsync(userChangePasswordRequest.ToUserChangePassword(User.Identity.Name));
         return Ok();
     }
 }

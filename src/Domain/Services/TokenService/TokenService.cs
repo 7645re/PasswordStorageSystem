@@ -29,9 +29,14 @@ public class TokenService : ITokenService
         };
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
         var expire = DateTime.UtcNow.AddHours(_jwtOptions.AccessTokenExpireHours);
-        
-        var expireWithoutMilSecAndMacroSec = expire
-            .AddMilliseconds(-1 * expire.Millisecond);
+
+        var expireWithoutMilSecAndMacroSec = new DateTime(
+            expire.Year,
+            expire.Month,
+            expire.Day,
+            expire.Hour,
+            expire.Minute,
+            expire.Second);
 
         var token = new JwtSecurityToken(
             _jwtOptions.Issuer,
