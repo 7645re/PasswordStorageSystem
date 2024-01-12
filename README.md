@@ -15,8 +15,11 @@ it was created solely for informational purposes
  2. DataStax C# Driver
  3. Cassandra
  4. Docker
- 5. JWT Auth
- 6. Swagger
+ 5. Testcontainers
+ 6. XUnit
+ 7. NUnit
+ 8. JWT Auth
+ 9. Swagger
 
 # Emerging issues:
  1. It is quite difficult to write unit tests for repositories with cassandra
