@@ -29,8 +29,4 @@
       <Folder Include="TestResults" />
     </ItemGroup>
 
-    <ItemGroup>
-      <None Remove="TestResults\TestReport_20240107052335.md" />
-    </ItemGroup>
-
 </Project>
