@@ -58,3 +58,28 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         path: ${{env.file_name}}
+
+  integration_tests:
+    runs-on: ubuntu-latest
+    needs: build  # Ensure the build job completes before starting integration tests
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Setup .NET Core
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 6.0.101
+
+    - name: Install dependencies
+      run: dotnet restore
+
+    - name: Run Integration Tests
+      run: dotnet test path/to/IntegrationTests.csproj --no-restore --no-build --configuration $config
+
+    - name: Upload Integration Test Results
+      uses: actions/upload-artifact@v2
+      if: ${{always()}}
+      with:
+        name: 'Integration Test Run'
+        path: path/to/TestResults  # Adjust the path to the actual location of your integration test results
