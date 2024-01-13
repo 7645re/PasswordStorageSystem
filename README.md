@@ -5,6 +5,11 @@ The subject area of the test project was chosen randomly, the topic "Password st
 Project does not pretend to be truly correct solutions in the implementation of certain structures,
 it was created solely for informational purposes
 
+# Startup
+```
+docker run -d --name PasswordStorageSystem -p 9042:9042 cassandra:latest
+```
+
 # Chebotko Diagram
 <img width="791" alt="image" src="https://github.com/7645re/PasswordStorageSystem/assets/89273037/4e710757-94b4-4808-9843-8b2e7fa16ef0">
 
