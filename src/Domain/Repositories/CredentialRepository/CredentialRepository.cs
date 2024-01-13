@@ -56,6 +56,15 @@ public class CredentialRepository : CassandraRepositoryBase<CredentialEntity>, I
         return credential;
     }
 
+    public async Task<long> GetCountOfCredentialsAsync(string userLogin)
+    {
+        var credentialsCount = await ExecuteQueryAsync(
+            Table
+                .Where(e => e.UserLogin == userLogin)
+                .Count());
+        return credentialsCount;
+    }
+
     public async Task<CredentialEntity[]> GetCredentialsByLoginPagedAsync(
         string login,
         int pageSize,

@@ -15,4 +15,5 @@ public interface ICredentialRepository
         string userLogin,
         DateTimeOffset createdAt,
         Guid id);
+    Task<long> GetCountOfCredentialsAsync(string userLogin);
 }

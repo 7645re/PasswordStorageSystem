@@ -29,6 +29,11 @@ public class CredentialService : ICredentialService
             .ToArray();
     }
 
+    public async Task<long> GetCredentialsCountAsync(string userLogin)
+    {
+        return await _credentialRepository.GetCountOfCredentialsAsync(userLogin);
+    }
+
     public async Task<Credential> CreateCredentialAsync(CredentialCreate credentialCreate)
     {
         _credentialValidator.ValidateCredentialCreate(credentialCreate);

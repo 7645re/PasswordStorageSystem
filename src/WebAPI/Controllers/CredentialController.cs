@@ -34,6 +34,13 @@ public class CredentialController : ControllerBase
         return Ok();
     }
 
+    [HttpGet("count")]
+    public async Task<IActionResult> GetUserCredentialsCountAsync()
+    {
+        var result = await _credentialService.GetCredentialsCountAsync(User.Identity?.Name);
+        return Ok(result);
+    }
+
     [HttpDelete]
     public async Task<IActionResult> DeleteCredentialAsync(
         [FromBody] CredentialDeleteRequest credentialDeleteRequest)
