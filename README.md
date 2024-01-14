@@ -7,7 +7,8 @@ it was created solely for informational purposes
 
 # Startup
 ```
-docker run -d --name PasswordStorageSystem -p 9042:9042 cassandra:latest
+Go to src/
+docker-compose up
 ```
 
 # Chebotko Diagram
