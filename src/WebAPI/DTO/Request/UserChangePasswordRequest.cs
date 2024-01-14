@@ -1,3 +1,11 @@
+using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
+
 namespace WebAPI.DTO.Request;
 
-public record UserChangePasswordRequest(string NewPassword);
+public class UserChangePasswordRequest
+{
+    [Required]
+    [JsonPropertyName("newPassword")]
+    public string NewPassword { get; set; } = string.Empty;
+}

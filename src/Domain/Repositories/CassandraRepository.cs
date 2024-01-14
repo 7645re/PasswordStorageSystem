@@ -8,7 +8,7 @@ namespace Domain.Repositories;
 
 public abstract class CassandraRepositoryBase<T> where T : class
 {
-    protected Table<T> Table { get; set; }
+    protected Table<T> Table { get; }
 
     private readonly ILogger _logger;
 

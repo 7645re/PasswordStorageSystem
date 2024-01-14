@@ -3,7 +3,7 @@ using WebAPI.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Configuration
-    .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: false, reloadOnChange: true);
+    .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", false, true);
 
 builder.Services.Configure<CassandraOptions>(builder.Configuration.GetRequiredSection("Cassandra"));
 builder.Services.Configure<JwtOptions>(builder.Configuration.GetRequiredSection("Jwt"));

@@ -1,0 +1,27 @@
+version: "3.9"
+networks:
+  password_storage_system:
+    driver: bridge
+services:
+  app:
+    container_name: password-storage-system
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+    networks:
+      - password_storage_system
+    depends_on:
+      - cassandra
+  cassandra:
+    container_name: cassandra
+    image: cassandra:latest
+    ports:
+      - "9042:9042"
+    networks:
+      - password_storage_system
+    volumes:
+      - cassandra-data:/var/lib/cassandra/data
+volumes:
+  cassandra-data:
