@@ -23,8 +23,8 @@ docker run -d --name PasswordStorageSystem -p 9042:9042 cassandra:latest
  3. Cassandra
  4. Docker
  5. Testcontainers
- 6. XUnit
- 7. NUnit
+ 6. XUnit, NUnit
+ 7. Github WorkFlow
  8. JWT Auth
  9. Swagger
 
