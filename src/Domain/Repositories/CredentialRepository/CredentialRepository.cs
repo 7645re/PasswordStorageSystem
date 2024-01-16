@@ -208,7 +208,7 @@ public class CredentialRepository : CassandraRepositoryBase<CredentialEntity>, I
     public async Task<IEnumerable<CqlCommand>> DeleteUserCredentialsWithDependenciesQueriesAsync(
         string userLogin)
     {
-        var allUserCredentials = await ExecuteQueryAsync(Table
+        var allUserCredentialsIds = await ExecuteQueryAsync(Table
             .Where(e => e.UserLogin == userLogin)
             .Select(e => e.Id));
 
@@ -216,7 +216,7 @@ public class CredentialRepository : CassandraRepositoryBase<CredentialEntity>, I
         {
             DeleteUserCredentialsQuery(userLogin),
             _credentialByResourceRepository.DeleteCredentialsByResourceQuery(userLogin),
-            _credentialHistoryRepository.DeleteCredentialsHistoriesItemsQuery(allUserCredentials)
+            _credentialHistoryRepository.DeleteCredentialsHistoriesItemsQuery(allUserCredentialsIds)
         };
     }
 

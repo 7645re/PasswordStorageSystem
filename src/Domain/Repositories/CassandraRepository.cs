@@ -3,6 +3,8 @@ using Cassandra.Data.Linq;
 using Cassandra.Mapping;
 using Domain.Factories;
 using Microsoft.Extensions.Logging;
+using Polly;
+using Polly.Retry;
 
 namespace Domain.Repositories;
 
@@ -12,12 +14,25 @@ public abstract class CassandraRepositoryBase<T> where T : class
 
     private readonly ILogger _logger;
 
-    protected CassandraRepositoryBase(ICassandraSessionFactory sessionFactory,
+    private readonly RetryPolicy _retryPolicy;
+
+    protected CassandraRepositoryBase(
+        ICassandraSessionFactory sessionFactory,
         ILogger<CassandraRepositoryBase<T>> logger)
     {
         _logger = logger;
         var session = sessionFactory.GetSession();
         Table = new Table<T>(session);
+
+        _retryPolicy = Policy
+            .Handle<Exception>()
+            .WaitAndRetry(
+                2,
+                retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt) * 5),
+                (exception, timespan, context) =>
+                {
+                    _logger.LogInformation($"{timespan}, {context.Count}, {exception}");
+                });
         Table.CreateIfNotExists();
     }
 
@@ -25,6 +40,7 @@ public abstract class CassandraRepositoryBase<T> where T : class
     {
         if (queryTrace == null) return;
         queryTrace.Parameters.TryGetValue("query", out var query);
+
         // TODO: stringBuilder
         var message = string.Join(Environment.NewLine,
             queryTrace.Events.Select(e => e.Description));
@@ -33,66 +49,104 @@ public abstract class CassandraRepositoryBase<T> where T : class
 
     protected async Task<IEnumerable<T>> ExecuteQueryAsync(CqlQuery<T> query)
     {
-        query.EnableTracing();
-        var result = await query.ExecuteAsync();
-        LogQueryTrace(query.QueryTrace);
-        return result;
+        return await _retryPolicy.ExecuteAsync(
+            async () =>
+            {
+                query.EnableTracing();
+                var result = await query.ExecuteAsync();
+                LogQueryTrace(query.QueryTrace);
+                return result;
+            }
+        );
     }
 
-    
     protected async Task<IEnumerable<T>> ExecuteQueryAsync<T>(CqlQuery<T> query)
     {
-        query.EnableTracing();
-        var result = await query.ExecuteAsync();
-        LogQueryTrace(query.QueryTrace);
-        return result;
+        return await _retryPolicy.ExecuteAsync(
+            async () =>
+            {
+                query.EnableTracing();
+                var result = await query.ExecuteAsync();
+                LogQueryTrace(query.QueryTrace);
+                return result;
+            }
+        );
     }
-    
+
     protected async Task ExecuteQueryAsync(CqlUpdate query)
     {
-        query.EnableTracing();
-        await query.ExecuteAsync();
-        LogQueryTrace(query.QueryTrace);
+        await _retryPolicy.ExecuteAsync(
+            async () =>
+            {
+                query.EnableTracing();
+                await query.ExecuteAsync();
+                LogQueryTrace(query.QueryTrace);
+            }
+        );
     }
 
     protected async Task ExecuteQueryAsync(CqlDelete query)
     {
-        query.EnableTracing();
-        await query.ExecuteAsync();
-        LogQueryTrace(query.QueryTrace);
+        await _retryPolicy.ExecuteAsync(
+            async () =>
+            {
+                query.EnableTracing();
+                await query.ExecuteAsync();
+                LogQueryTrace(query.QueryTrace);
+            }
+        );
     }
-    
+
     protected async Task ExecuteQueryAsync(CqlInsert<T> query)
     {
-        query.EnableTracing();
-        await query.ExecuteAsync();
-        LogQueryTrace(query.QueryTrace);
+        await _retryPolicy.ExecuteAsync(
+            async () =>
+            {
+                query.EnableTracing();
+                await query.ExecuteAsync();
+                LogQueryTrace(query.QueryTrace);
+            }
+        );
     }
-    
+
     protected async Task<long> ExecuteQueryAsync(CqlScalar<long> query)
     {
-        query.EnableTracing();
-        var result = await query.ExecuteAsync();
-        LogQueryTrace(query.QueryTrace);
-        return result;
+        return await _retryPolicy.ExecuteAsync(
+            async () =>
+            {
+                query.EnableTracing();
+                var result = await query.ExecuteAsync();
+                LogQueryTrace(query.QueryTrace);
+                return result;
+            }
+        );
     }
 
     protected async Task<IPage<T>> ExecuteQueryPagedAsync(CqlQuery<T> query)
     {
-        query.EnableTracing();
-        var result = await query.ExecutePagedAsync();
-        LogQueryTrace(query.QueryTrace);
-        return result;
+        return await _retryPolicy.ExecuteAsync(
+            async () =>
+            {
+                query.EnableTracing();
+                var result = await query.ExecutePagedAsync();
+                LogQueryTrace(query.QueryTrace);
+                return result;
+            }
+        );
     }
 
     protected async Task ExecuteAsBatchAsync(IEnumerable<CqlCommand> commands)
     {
-        var batch = Table
-            .GetSession()
-            .CreateBatch()
-            .Append(commands);
-        await batch.ExecuteAsync();
+        await _retryPolicy.ExecuteAsync(
+            async () =>
+            {
+                var batch = Table
+                    .GetSession()
+                    .CreateBatch()
+                    .Append(commands);
+                await batch.ExecuteAsync();
 
-        _logger.LogInformation(batch.ToString());
+                _logger.LogInformation(batch.ToString());
+            });
     }
 }
