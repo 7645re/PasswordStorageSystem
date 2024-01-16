@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Xunit;
 
@@ -32,7 +33,6 @@ public class IntegrationTestWebApplicationFactory<TProgram>
         builder.ConfigureTestServices(services =>
         {
             services.RemoveAll(typeof(ICassandraSessionFactory));
-
             services.AddSingleton<ICassandraSessionFactory>(sp =>
                 {
                     var options = new CassandraOptions
@@ -43,7 +43,8 @@ public class IntegrationTestWebApplicationFactory<TProgram>
                         UserName = "admin",
                         Password = "admin"
                     };
-                    return new CassandraSessionFactory(Options.Create(options));
+                    var logger = sp.GetRequiredService<ILogger<CassandraSessionFactory>>();
+                    return new CassandraSessionFactory(Options.Create(options), logger);
                 });
         });
 

@@ -26,7 +26,7 @@ public abstract class CassandraRepositoryBase<T> where T : class
 
         _retryPolicy = Policy
             .Handle<Exception>()
-            .WaitAndRetry(
+            .WaitAndRetryAsync(
                 2,
                 retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt) * 5),
                 (exception, timespan, context) =>
