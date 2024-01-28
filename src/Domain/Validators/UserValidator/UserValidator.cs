@@ -17,13 +17,13 @@ public class UserValidator : IUserValidator
     {
         if (password.Length < _passwordLengthRange.Min ||
             password.Length > _passwordLengthRange.Max)
-            throw new Exception("The password is too weak");
+            throw new ArgumentException("The password is too weak");
     }
 
     public void ValidateLogin(string login)
     {
         if (login.Length < _userLoginLengthRange.Min ||
             login.Length > _userLoginLengthRange.Max)
-            throw new Exception($"Login {login} length is not within the valid range");
+            throw new ArgumentException($"Login {login} length is not within the valid range");
     }
 }

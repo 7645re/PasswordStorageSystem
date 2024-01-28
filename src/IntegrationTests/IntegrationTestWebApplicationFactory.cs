@@ -30,6 +30,7 @@ public class IntegrationTestWebApplicationFactory<TProgram>
             configurationBuilder) =>
         {
         });
+
         builder.ConfigureTestServices(services =>
         {
             services.RemoveAll(typeof(ICassandraSessionFactory));

@@ -25,10 +25,14 @@ public class UserService : IUserService
         var user = await _userRepository.GetUserAsync(userLogIn.Login);
 
         if (user.Password != userLogIn.Password)
-            throw new Exception("Invalid password");
+            throw new ArgumentException("Invalid password");
 
         if (user.AccessTokenExpire.ToLocalTime() < DateTimeOffset.Now)
-            return _tokenService.GenerateAccessToken(userLogIn.Login);
+        {
+            var newToken = _tokenService.GenerateAccessToken(userLogIn.Login);
+            await _userRepository.ChangeAccessTokenAsync(userLogIn.Login, newToken);
+            return newToken;
+        }
 
         return new TokenInfo(user.AccessToken, user.AccessTokenExpire);
     }

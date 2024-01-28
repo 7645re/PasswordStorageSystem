@@ -10,7 +10,7 @@ public sealed class CassandraSessionFactory : ICassandraSessionFactory
 {
     private Lazy<ISession> _session;
     private readonly ILogger<CassandraSessionFactory> _logger;
-    
+
 
     public CassandraSessionFactory(
         IOptions<CassandraOptions> cassandraOptions,
@@ -18,8 +18,9 @@ public sealed class CassandraSessionFactory : ICassandraSessionFactory
     {
         _logger = logger;
         var options = cassandraOptions.Value;
-        
-        var retryPolicy = Policy
+
+
+        Policy
             .Handle<Exception>()
             .WaitAndRetry(
                 2,
@@ -27,24 +28,23 @@ public sealed class CassandraSessionFactory : ICassandraSessionFactory
                 (exception, timespan, context) =>
                 {
                     _logger.LogInformation($"{timespan}, {context.Count}, {exception}");
+                })
+            .Execute(
+                () =>
+                {
+                    var cluster = Cluster
+                        .Builder()
+                        .WithCredentials(options.UserName, options.Password)
+                        .WithPort(options.Port)
+                        .AddContactPoint(options.Address)
+                        .Build();
+
+                    var session = cluster.Connect();
+                    session.CreateKeyspaceIfNotExists(options.KeySpace);
+                    session.ChangeKeyspace(options.KeySpace);
+
+                    _session = new Lazy<ISession>(() => session);
                 });
-
-        retryPolicy.Execute(
-            () =>
-            {
-                var cluster = Cluster
-                    .Builder()
-                    .WithCredentials(options.UserName, options.Password)
-                    .WithPort(options.Port)
-                    .AddContactPoint(options.Address)
-                    .Build();
-
-                var session = cluster.Connect();
-                session.CreateKeyspaceIfNotExists(options.KeySpace);
-                session.ChangeKeyspace(options.KeySpace);
-
-                _session = new Lazy<ISession>(() => session);
-            });
     }
 
     public ISession GetSession()

@@ -26,14 +26,15 @@ public class ExceptionHandlerFilter : IExceptionFilter
 
     private ExceptionDetail GetExceptionDetail(Exception exception, RouteData routeData)
     {
-        var parameter = routeData.Values["action"]!.ToString()!;
-        var errorId = Guid.NewGuid();
+        var parameter = routeData
+            .Values["action"]!
+            .ToString()!;
 
         return new ExceptionDetail
         {
             Error = "InvalidRequest",
             Parameter = parameter,
-            Code = errorId,
+            Code = Guid.NewGuid(),
             Message = exception.Message
         };
     }

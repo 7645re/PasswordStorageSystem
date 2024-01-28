@@ -169,7 +169,7 @@ public class CredentialValidatorTests
             "12313132",
             "12313123");
 
-        // Act
+        // Act / Assert
         _credentialValidator.ValidateCredentialCreate(credential);
     }
     
@@ -183,7 +183,7 @@ public class CredentialValidatorTests
             Guid.Empty,
             "12345");
         
-        // Act
+        // Act / Assert
         _credentialValidator.ValidateCredentialUpdate(credential);
     }
 }

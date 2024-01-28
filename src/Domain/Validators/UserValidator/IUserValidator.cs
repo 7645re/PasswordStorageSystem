@@ -6,4 +6,5 @@ public interface IUserValidator
 {
     void Validate(UserCreate userCreate);
     void ValidatePassword(string password);
+    void ValidateLogin(string login);
 }

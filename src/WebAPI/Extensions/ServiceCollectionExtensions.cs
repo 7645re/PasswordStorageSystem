@@ -54,7 +54,8 @@ public static class ServiceCollectionExtensions
         return services;
     }
 
-    public static IServiceCollection AddServices(this IServiceCollection services)
+    public static IServiceCollection AddServices(
+        this IServiceCollection services)
     {
         services.AddTransient<IUserService, UserService>();
         services.AddTransient<ICredentialService, CredentialService>();
@@ -62,13 +63,15 @@ public static class ServiceCollectionExtensions
         return services;
     }
 
-    public static IServiceCollection AddFactories(this IServiceCollection services)
+    public static IServiceCollection AddFactories(
+        this IServiceCollection services)
     {
         services.AddSingleton<ICassandraSessionFactory, CassandraSessionFactory>();
         return services;
     }
 
-    public static IServiceCollection AddRepositories(this IServiceCollection services)
+    public static IServiceCollection AddRepositories(
+        this IServiceCollection services)
     {
         services.AddSingleton<ICredentialByResourceRepository, CredentialByResourceRepository>();
         services.AddSingleton<ICredentialHistoryRepository, CredentialHistoryRepository>();
@@ -78,14 +81,16 @@ public static class ServiceCollectionExtensions
         return services;
     }
 
-    public static IServiceCollection AddValidators(this IServiceCollection services)
+    public static IServiceCollection AddValidators(
+        this IServiceCollection services)
     {
         services.AddSingleton<ICredentialValidator, CredentialValidator>();
         services.AddSingleton<IUserValidator, UserValidator>();
         return services;
     }
 
-    public static IServiceCollection AddCORS(this IServiceCollection services)
+    public static IServiceCollection AddCORS(
+        this IServiceCollection services)
     {
         return services.AddCors(options =>
         {
@@ -99,7 +104,8 @@ public static class ServiceCollectionExtensions
         });
     }
 
-    public static IServiceCollection AddSwagger(this IServiceCollection services)
+    public static IServiceCollection AddSwagger(
+        this IServiceCollection services)
     {
         return services.AddSwaggerGen(c =>
         {
@@ -127,7 +133,8 @@ public static class ServiceCollectionExtensions
         });
     }
 
-    public static AuthenticationBuilder AddJwt(this IServiceCollection services,
+    public static AuthenticationBuilder AddJwt(
+        this IServiceCollection services,
         ConfigurationManager configurationManager)
     {
         var key = Encoding.ASCII.GetBytes(configurationManager["Jwt:Key"]);
